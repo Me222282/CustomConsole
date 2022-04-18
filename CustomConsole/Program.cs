@@ -13,7 +13,7 @@ namespace CustomConsole
         {
             Core.Init();
             
-            Program window = new Program(800, 500, VirtualConsole.Directory);
+            Program window = new Program(800, 500, Terminal.Directory);
 
             window.Run();
             
@@ -75,9 +75,9 @@ namespace CustomConsole
             GLFW.SwapInterval(1);
 
             // Update draw when output to console
-            VirtualConsole.OnLog += (_, _) => _update = true;
+            Terminal.OnLog += (_, _) => _update = true;
 
-            VirtualConsole.AddFunction("Copy", new VariableType[] { VariableType.String, VariableType.Int }, (objs, info) =>
+            Terminal.AddFunction("Copy", new VariableType[] { VariableType.String, VariableType.Int }, (objs, info) =>
             {
                 bool displayCount = false;
 
@@ -97,14 +97,14 @@ namespace CustomConsole
                 {
                     if (displayCount)
                     {
-                        VirtualConsole.Log($"{text} - {i}");
+                        Terminal.Log($"{text} - {i}");
                         continue;
                     }
 
-                    VirtualConsole.Log(text);
+                    Terminal.Log(text);
                 }
             });
-            VirtualConsole.AddVariable("margin", VariableType.Double, () =>
+            Terminal.AddVariable("margin", VariableType.Double, () =>
             {
                 return _margin;
             }, obj =>
@@ -113,7 +113,7 @@ namespace CustomConsole
             });
 
             Vector3 v = Vector3.One;
-            VirtualConsole.AddVariable("v", VariableType.Vector3, () =>
+            Terminal.AddVariable("v", VariableType.Vector3, () =>
             {
                 return v;
             }, obj =>
@@ -142,16 +142,16 @@ namespace CustomConsole
 
                 _textRender.Model = originOffset;
 
-                ReadOnlySpan<char> enterText = VirtualConsole.Name + "> " + _enterText.ToString();
+                ReadOnlySpan<char> enterText = Terminal.Name + "> " + _enterText.ToString();
                 _textRender.DrawLeftBound(enterText, _fontC);
 
                 SetCaretOffset(enterText);
 
                 _textRender.DrawLeftBound($"{Caret}", _fontC);
 
-                if (Title != VirtualConsole.Directory)
+                if (Title != Terminal.Directory)
                 {
-                    Title = VirtualConsole.Directory;
+                    Title = Terminal.Directory;
                 }
 
                 GLFW.SwapBuffers(Handle);
@@ -170,9 +170,9 @@ namespace CustomConsole
 
             double lineOffset = 0;
 
-            for (int i = 0; i < VirtualConsole.Output.Count; i++)
+            for (int i = 0; i < Terminal.Output.Count; i++)
             {
-                ReadOnlySpan<char> text = VirtualConsole.Output[i];
+                ReadOnlySpan<char> text = Terminal.Output[i];
 
                 double location = corner.Y + (_viewOffset + lineOffset - _fontC.LineHeight);
                 // Above view
@@ -200,7 +200,7 @@ namespace CustomConsole
 
             fixed (char* c = &enterText[0])
             {
-                offsetCount = new ReadOnlySpan<char>(c, VirtualConsole.Name.Length + 2 + _textIndex);
+                offsetCount = new ReadOnlySpan<char>(c, Terminal.Name.Length + 2 + _textIndex);
             }
 
             double charSpace = _fontC.GetCharacterData(offsetCount[^1]).Buffer + _fontC.CharSpace;
@@ -269,12 +269,12 @@ namespace CustomConsole
             {
                 string command = _enterText.ToString();
 
-                VirtualConsole.Log(VirtualConsole.Name + "> " + command);
-                VirtualConsole.ExecuteCommand(command);
+                Terminal.Log(Terminal.Name + "> " + command);
+                Terminal.ExecuteCommand(command);
 
-                if (VirtualConsole.Output.Count > 0)
+                if (Terminal.Output.Count > 0)
                 {
-                    VirtualConsole.NewLine();
+                    Terminal.NewLine();
                 }
 
                 _enterText.Clear();
