@@ -1,0 +1,4 @@
+[submodule "ZeneGraphics"]
+	path = ZeneGraphics
+	url = https://github.com/Me222282/ZeneLibrary.git
+	branch = graphics
