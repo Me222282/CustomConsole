@@ -1,6 +1,6 @@
 ﻿namespace CustomConsole
 {
-    public abstract class Syntax
+    public abstract class Syntax : ISyntax
     {
         public Syntax(VariableType returnType, ExecuteHandle handle)
         {
