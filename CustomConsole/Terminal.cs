@@ -11,19 +11,19 @@ namespace CustomConsole
 
     public enum VariableType
     {
-        Int = 1,
-        Float,
-        Double,
-        String,
-        Char,
-        Bool,
+        Int = 0b_0000_0000_0010,
+        Float = 0b_0000_0000_0100 | Int,
+        Double = 0b_0000_0000_1000 | Float | Int,
+        String = 0b_0000_0001_0000,
+        Char = 0b_0000_0010_0000,
+        Bool = 0b_0000_0100_0000,
 
-        Vector2,
-        Vector3,
+        Vector2 = 0b_0000_1000_0000 | Vector3,
+        Vector3 = 0b_0001_0000_0000,
 
-        Any,
-        NonVoid,
-        Void = 0,
+        Void = 0b_0000_0001,
+        NonVoid = Int | Float | Double | String | Char | Bool | Vector2 | Vector3,
+        Any = NonVoid | Void
     }
 
     public static class Terminal
@@ -332,171 +332,6 @@ namespace CustomConsole
             }
 
             _history.Add(text);
-        }
-
-        public static KeyWord[] FindKeyWords(string code)
-        {
-            code = code.Trim();
-
-            List<KeyWord> keywords = new List<KeyWord>(code.Length);
-
-            int bracket = 0;
-            bool newWord = true;
-            bool inNumber = false;
-            bool inText = false;
-            bool inSpecial = false;
-
-            bool inString = false;
-            bool inChar = false;
-
-            StringBuilder word = new StringBuilder();
-
-            for (int i = 0; i < code.Length; i++)
-            {
-                char c = code[i];
-
-                if (newWord)
-                {
-                    if (c == '(')
-                    {
-                        keywords.Add(new KeyWord("(", bracket));
-                        bracket++;
-                        continue;
-                    }
-                    if (char.IsNumber(c))
-                    {
-                        newWord = false;
-                        inNumber = true;
-
-                        word.Append(c);
-
-                        continue;
-                    }
-                    if (c == '_' || char.IsLetter(c))
-                    {
-                        newWord = false;
-                        inText = true;
-
-                        word.Append(c);
-
-                        continue;
-                    }
-                    if (c == '\"')
-                    {
-                        newWord = false;
-                        inString = true;
-
-                        keywords.Add(new KeyWord("\""));
-
-                        continue;
-                    }
-                    if (c == '\'')
-                    {
-                        newWord = false;
-                        inChar = true;
-
-                        keywords.Add(new KeyWord("\'"));
-
-                        continue;
-                    }
-                    if (!char.IsWhiteSpace(c))
-                    {
-                        newWord = false;
-                        inSpecial = true;
-
-                        word.Append(c);
-
-                        continue;
-                    }
-
-                    continue;
-                }
-
-                if (!inString && !inChar && c == ')')
-                {
-                    newWord = true;
-                    inNumber = false;
-                    inText = false;
-                    inSpecial = false;
-
-                    keywords.Add(new KeyWord(word.ToString()));
-                    word.Clear();
-
-                    bracket--;
-                    keywords.Add(new KeyWord(")", bracket));
-                    continue;
-                }
-
-                if (inNumber && c != '.' && !char.IsNumber(c))
-                {
-                    newWord = true;
-                    inNumber = false;
-
-                    keywords.Add(new KeyWord(word.ToString()));
-                    word.Clear();
-
-                    i--;
-                    continue;
-                }
-
-                if (inText && c != '_' && !char.IsNumber(c) && !char.IsLetter(c))
-                {
-                    newWord = true;
-                    inText = false;
-
-                    keywords.Add(new KeyWord(word.ToString()));
-                    word.Clear();
-
-                    i--;
-                    continue;
-                }
-
-                if (inSpecial && (char.IsWhiteSpace(c) || char.IsNumber(c) || char.IsLetter(c)))
-                {
-                    newWord = true;
-                    inSpecial = false;
-
-                    keywords.Add(new KeyWord(word.ToString()));
-                    word.Clear();
-
-                    i--;
-                    continue;
-                }
-
-                if (inString && c == '\"' && code[i - 1] == '\\')
-                {
-                    newWord = true;
-                    inString = false;
-
-                    keywords.Add(new KeyWord("\""));
-
-                    keywords.Add(new KeyWord(word.ToString()));
-                    word.Clear();
-
-                    continue;
-                }
-                if (inChar && c == '\'' && code[i - 1] == '\\')
-                {
-                    newWord = true;
-                    inChar = false;
-
-                    keywords.Add(new KeyWord("\'"));
-
-                    keywords.Add(new KeyWord(word.ToString()));
-                    word.Clear();
-
-                    continue;
-                }
-
-                word.Append(c);
-            }
-
-            if (word.Length > 0)
-            {
-                keywords.Add(new KeyWord(word.ToString()));
-            }
-
-            return keywords.ToArray();
         }
 
         public static event EventHandler<string> OnLog;

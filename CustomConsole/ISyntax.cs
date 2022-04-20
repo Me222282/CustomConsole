@@ -1,12 +1,15 @@
-﻿namespace CustomConsole
+﻿using System;
+
+namespace CustomConsole
 {
     public interface ISyntax
     {
         public KeyWord[] Keywords { get; }
         public VariableType ReturnType { get; }
+        public ICodeFormat DisplayFormat { get; }
 
-        public bool PotentialMatch(KeyWord[] code);
+        public bool ValidSyntax(ReadOnlySpan<KeyWord> code);
 
-        public Executable CreateInstance(KeyWord[] code);
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code);
     }
 }
