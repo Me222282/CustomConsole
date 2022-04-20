@@ -287,6 +287,7 @@ namespace CustomConsole
                 new DoubleSyntax(),
                 new StringSyntax(),
                 new CharSyntax(),
+                new BoolSyntax(),
                 new GetVariableSyntax(),
                 new SetVariableSyntax(),
 

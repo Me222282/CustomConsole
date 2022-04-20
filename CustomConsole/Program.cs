@@ -140,7 +140,7 @@ namespace CustomConsole
             Executable e;
             try
             {
-                e = Syntax.Decode("{3, 4, 5}".FindKeyWords());
+                e = Syntax.Decode("true".FindKeyWords());
             }
             catch (ConsoleException ex)
             {
