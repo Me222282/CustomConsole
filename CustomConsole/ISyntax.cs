@@ -5,6 +5,7 @@ namespace CustomConsole
     public interface ISyntax
     {
         public KeyWord[] Keywords { get; }
+        public VariableType[] InputTypes { get; }
         public VariableType ReturnType { get; }
         public ICodeFormat DisplayFormat { get; }
 

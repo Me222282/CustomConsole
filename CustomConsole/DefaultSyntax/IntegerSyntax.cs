@@ -5,6 +5,7 @@ namespace CustomConsole
     public class IntegerSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Number) };
+        public VariableType[] InputTypes => null;
         public VariableType ReturnType => VariableType.Int;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 

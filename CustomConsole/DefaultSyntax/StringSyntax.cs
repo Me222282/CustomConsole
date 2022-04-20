@@ -10,6 +10,7 @@ namespace CustomConsole
             new KeyWord(null, KeyWordType.String),
             new KeyWord("\"", KeyWordType.String)
         };
+        public VariableType[] InputTypes => null;
         public VariableType ReturnType => VariableType.String;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
@@ -24,7 +25,7 @@ namespace CustomConsole
         {
             index = 3;
 
-            if (code.Length == 0) { return null; }
+            if (code.Length < 2) { return null; }
 
             // Not valid string
             if (code[0].Word != "\"" || code[2].Word != "\"")
@@ -33,6 +34,8 @@ namespace CustomConsole
             }
 
             string text = code[1].Word;
+
+            FormatStringInput(ref text);
 
             return new Executable(this, new KeyWord[]
                 {
@@ -46,6 +49,15 @@ namespace CustomConsole
             if (code.Length != 3) { return null; }
 
             return CorrectSyntax(code, type, out _);
+        }
+
+        public static void FormatStringInput(ref string str)
+        {
+            str = str.Replace("\\\\", "\\");
+            str = str.Replace("\\\"", "\"");
+            str = str.Replace("\\\'", "\'");
+            str = str.Replace("\\n", "\n");
+            str = str.Replace("\\r", "\r");
         }
     }
 }

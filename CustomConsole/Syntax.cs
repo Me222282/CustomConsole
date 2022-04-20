@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace CustomConsole
 {
@@ -12,14 +11,26 @@ namespace CustomConsole
             ReturnType = returnType;
             Handle = handle;
 
-            // Keywords contain an input of any type
-            InputCount = keywords.Count(k => k == KeyWord.UnknownInput);
+            int inputIndex = 0;
+            List<VariableType> inputs = new List<VariableType>();
+
+            for (int i = 0; i < keywords.Length; i++)
+            {
+                if (keywords[i] == KeyWord.UnknownInput)
+                {
+                    inputs.Add(keywords[i].InputType);
+                    inputIndex++;
+                }
+            }
+
+            InputTypes = inputs.ToArray();
         }
 
         public KeyWord[] Keywords { get; }
+        public VariableType[] InputTypes { get; }
         public ExecuteHandle Handle { get; }
         public VariableType ReturnType { get; }
-        public int InputCount { get; }
+        public int InputCount => InputTypes.Length;
 
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
@@ -129,9 +140,11 @@ namespace CustomConsole
             return e;
         }
 
-        public static List<ISyntax> Syntaxes { get; } = new List<ISyntax>();
+        public static List<ISyntax> Syntaxes { get; }
         public static Executable Decode(ReadOnlySpan<KeyWord> syntax, VariableType returnType = VariableType.Any)
         {
+            if (syntax.Length == 0) { return null; }
+
             for (int i = 0; i < Syntaxes.Count; i++)
             {
                 // Doesn't return correct type
@@ -173,6 +186,7 @@ namespace CustomConsole
         {
             nextIndex = 0;
 
+            if (syntax.Length == 0) { return null; }
             if (nextWord.Word != null && !syntax.Contains(nextWord)) { return null; }
 
             if (syntax[0].Word == "(")
@@ -263,5 +277,21 @@ namespace CustomConsole
         }
 
         public static List<Variable> Variables { get; } = new List<Variable>();
+
+        static Syntax()
+        {
+            Syntaxes = new List<ISyntax>()
+            {
+                new IntegerSyntax(),
+                new FloatSyntax(),
+                new DoubleSyntax(),
+                new StringSyntax(),
+                new CharSyntax(),
+                new GetVariableSyntax(),
+                new SetVariableSyntax(),
+
+
+            };
+        }
     }
 }

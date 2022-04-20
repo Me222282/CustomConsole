@@ -19,12 +19,6 @@ namespace CustomConsole
             
             Core.Terminate();*/
 
-            Syntax.Syntaxes.Add(new IntegerSyntax());
-            Syntax.Syntaxes.Add(new DoubleSyntax());
-            Syntax.Syntaxes.Add(new StringSyntax());
-            Syntax.Syntaxes.Add(new GetVariableSyntax());
-            Syntax.Syntaxes.Add(new SetVariableSyntax());
-
             int bean = 5;
             Syntax.Variables.Add(new Variable("bean", VariableType.Int, () =>
             {
@@ -37,9 +31,36 @@ namespace CustomConsole
             Syntax.Syntaxes.Add(new Syntax(
                 new KeyWord[]
                 {
+                    new KeyWord("{", KeyWordType.BracketOpen),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("}", KeyWordType.BracketClosed)
+                }, VariableType.Vector2, (objs) =>
+                {
+                    return new Vector2((double)objs[0], (double)objs[1]);
+                }));
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
+                    new KeyWord("{", KeyWordType.BracketOpen),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("}", KeyWordType.BracketClosed)
+                }, VariableType.Vector3, (objs) =>
+                {
+                    return new Vector3((double)objs[0], (double)objs[1], (double)objs[2]);
+                }));
+
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
                     new KeyWord(VariableType.Int),
                     new KeyWord("+", KeyWordType.Special),
-                    new KeyWord(VariableType.Int),
+                    new KeyWord(VariableType.Int)
                 }, VariableType.Int, (objs) =>
                 {
                     return (int)objs[0] + (int)objs[1];
@@ -58,11 +79,51 @@ namespace CustomConsole
                 new KeyWord[]
                 {
                     new KeyWord(VariableType.Double),
-                    new KeyWord("+", KeyWordType.Special),
+                    new KeyWord("-", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] - (double)objs[1];
+                }));
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
                     new KeyWord(VariableType.Double),
+                    new KeyWord("+", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
                 }, VariableType.Double, (objs) =>
                 {
                     return (double)objs[0] + (double)objs[1];
+                }));
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("*", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] * (double)objs[1];
+                }));
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("/", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] / (double)objs[1];
+                }));
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("%", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] % (double)objs[1];
                 }));
 
             Syntax.Syntaxes.Add(new Syntax(
@@ -70,7 +131,7 @@ namespace CustomConsole
                 {
                     new KeyWord(VariableType.Int),
                     new KeyWord("*", KeyWordType.Special),
-                    new KeyWord(VariableType.Int),
+                    new KeyWord(VariableType.Int)
                 }, VariableType.Int, (objs) =>
                 {
                     return (int)objs[0] * (int)objs[1];
@@ -79,7 +140,7 @@ namespace CustomConsole
             Executable e;
             try
             {
-                e = Syntax.Decode("(bean = ((5) + (2)))".FindKeyWords());
+                e = Syntax.Decode("{3, 4, 5}".FindKeyWords());
             }
             catch (ConsoleException ex)
             {

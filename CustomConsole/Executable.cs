@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Zene.Structs;
 
 namespace CustomConsole
 {
@@ -73,6 +74,26 @@ namespace CustomConsole
             for (int i = 0; i < @params.Length; i++)
             {
                 @params[i] = SubExecutables[i].Execute();
+
+                if (@params[i] is int)
+                {
+                    if (Source.InputTypes[i] == VariableType.Float)
+                    {
+                        @params[i] = (float)(int)@params[i];
+                    }
+                    else if (Source.InputTypes[i] == VariableType.Double)
+                    {
+                        @params[i] = (double)(int)@params[i];
+                    }
+                }
+
+                if (@params[i] is Vector3)
+                {
+                    if (Source.InputTypes[i] == VariableType.Vector2)
+                    {
+                        @params[i] = (Vector2)(Vector3)@params[i];
+                    }
+                }
             }
 
             return Function(@params);

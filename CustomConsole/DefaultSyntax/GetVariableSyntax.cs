@@ -5,6 +5,7 @@ namespace CustomConsole
     public class GetVariableSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Word) };
+        public VariableType[] InputTypes => null;
         public VariableType ReturnType => VariableType.NonVoid;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
@@ -50,6 +51,7 @@ namespace CustomConsole
             new KeyWord("=", KeyWordType.Special),
             new KeyWord("", KeyWordType.Input, (int)VariableType.NonVoid)
         };
+        public VariableType[] InputTypes { get; } = new VariableType[1] { VariableType.NonVoid };
         public VariableType ReturnType => VariableType.Void;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
