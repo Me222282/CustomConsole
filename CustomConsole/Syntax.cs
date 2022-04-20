@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Zene.Structs;
 
 namespace CustomConsole
 {
@@ -49,6 +50,13 @@ namespace CustomConsole
                 if (Keywords.Length > wordIndex &&
                     code[i].Word == Keywords[wordIndex].Word)
                 {
+                    // Next found keyword left no space for input syntax,
+                    // the current keyword match is incorrect
+                    if ((i == 0) && (wordIndex > 0))
+                    {
+                        continue;
+                    }
+
                     // Reached end of this syntaxes keywords but not the end of the code,
                     // the current keyword match is incorrect
                     if (code.Length != (i + 1) &&
@@ -83,6 +91,7 @@ namespace CustomConsole
                 return false;
             }
 
+            // Reached end of this syntaxes keywords
             return wordIndex == Keywords.Length;
         }
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param)
@@ -95,19 +104,33 @@ namespace CustomConsole
 
             int inputIndex = 0;
             Executable[] subExes = new Executable[InputCount];
+            /*
+            if (Keywords.Length > 1 &&
+                // First keyword is input
+                Keywords[0].Word == "" &&
+                Keywords[0].Word == )
+            {
+
+            }*/
 
             for (int i = 0; i < Keywords.Length; i++)
             {
                 // Input
                 if (Keywords[i].Type == KeyWordType.Input)
                 {
+                    ReadOnlySpan<KeyWord> slice = code[index..];
+
                     KeyWord nextKW = new KeyWord();
                     if (Keywords.Length > (i + 1))
                     {
                         nextKW = Keywords[i + 1];
+
+                        int lastI = slice.FindLastIndex(k => k.Word == nextKW.Word);
+                        slice = slice.Slice(0,
+                            lastI + 1 > slice.Length ? lastI : (lastI + 1));
                     }
 
-                    Executable e = FindCorrectSyntax(code[index..], this, Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
+                    Executable e = FindCorrectSyntax(slice, this, Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
                     index += addIndex;
 
                     // No valid syntax to match input could be found
@@ -187,7 +210,8 @@ namespace CustomConsole
             nextIndex = 0;
 
             if (syntax.Length == 0) { return null; }
-            if (nextWord.Word != null && !syntax.Contains(nextWord)) { return null; }
+            // There is a next keyword and the earliest possible syntax doesn't contain it
+            if (nextWord.Word != null && !syntax[1..].Contains(nextWord)) { return null; }
 
             if (syntax[0].Word == "(")
             {
@@ -215,12 +239,9 @@ namespace CustomConsole
                 if (!fill && nextWord.Word != null &&
 
                     // Syntax is long enough
-                    ((syntax.Length > nextIndex &&
+                    (syntax.Length > nextIndex &&
                     // Next keyword doesn't match
-                    syntax[nextIndex] != nextWord) ||
-
-                    // Syntax isn't long enough
-                    syntax.Length < (nextIndex + 1)))
+                    syntax[nextIndex] != nextWord))
                 {
                     continue;
                 }
@@ -241,6 +262,9 @@ namespace CustomConsole
             }
 
             nextIndex = end + 1;
+
+            // Brackets don't fill whole syntax
+            if (fill && nextIndex != syntax.Length) { return null; }
 
             // There is a next keyword
             if (!fill && nextWord.Word != null &&
@@ -291,7 +315,249 @@ namespace CustomConsole
                 new GetVariableSyntax(),
                 new SetVariableSyntax(),
 
+                // Vector2
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("{", KeyWordType.BracketOpen),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("}", KeyWordType.BracketClosed)
+                }, VariableType.Vector2, (objs) =>
+                {
+                    return new Vector2((double)objs[0], (double)objs[1]);
+                }),
+                // Vector3
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("{", KeyWordType.BracketOpen),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("}", KeyWordType.BracketClosed)
+                }, VariableType.Vector3, (objs) =>
+                {
+                    return new Vector3((double)objs[0], (double)objs[1], (double)objs[2]);
+                }),
+                // Vector4
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("{", KeyWordType.BracketOpen),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("}", KeyWordType.BracketClosed)
+                }, VariableType.Vector4, (objs) =>
+                {
+                    return new Vector4((double)objs[0], (double)objs[1], (double)objs[2], (double)objs[3]);
+                }),
 
+                //
+                // Interger operators
+                //
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("|", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] | (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("&", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] & (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("<<", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] << (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord(">>", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] >> (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("^", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] ^ (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("-", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] - (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("+", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] + (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("*", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] * (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("/", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] / (int)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("%", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] % (int)objs[1];
+                }),
+
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("-", KeyWordType.Special),
+                    new KeyWord(VariableType.Int)
+                }, VariableType.Int, (objs) =>
+                {
+                    return -(int)objs[0];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("|", KeyWordType.Special),
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("|", KeyWordType.Special)
+                }, VariableType.Int, (objs) =>
+                {
+                    return Math.Abs((int)objs[0]);
+                }),
+
+                //
+                // Double operators
+                //
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("-", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] - (double)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("+", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] + (double)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("*", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] * (double)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("/", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] / (double)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("%", KeyWordType.Special),
+                    new KeyWord(VariableType.Double)
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] % (double)objs[1];
+                }),
+
+                //
+                // Vector2 operators
+                //
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Vector2),
+                    new KeyWord("-", KeyWordType.Special),
+                    new KeyWord(VariableType.Vector2)
+                }, VariableType.Vector2, (objs) =>
+                {
+                    return (Vector2)objs[0] - (Vector2)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Vector2),
+                    new KeyWord("+", KeyWordType.Special),
+                    new KeyWord(VariableType.Vector2)
+                }, VariableType.Vector2, (objs) =>
+                {
+                    return (Vector2)objs[0] + (Vector2)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Vector2),
+                    new KeyWord("*", KeyWordType.Special),
+                    new KeyWord(VariableType.Vector2)
+                }, VariableType.Vector2, (objs) =>
+                {
+                    return (Vector2)objs[0] * (Vector2)objs[1];
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.Vector2),
+                    new KeyWord("/", KeyWordType.Special),
+                    new KeyWord(VariableType.Vector2)
+                }, VariableType.Vector2, (objs) =>
+                {
+                    return (Vector2)objs[0] / (Vector2)objs[1];
+                })
             };
         }
     }

@@ -22,6 +22,7 @@ namespace CustomConsole
 
         Vector2,
         Vector3,
+        Vector4,
 
         NonVoid,
         Any

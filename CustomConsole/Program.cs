@@ -29,44 +29,6 @@ namespace CustomConsole
             }));
 
             Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord("{", KeyWordType.BracketOpen),
-                    new KeyWord(VariableType.Double),
-                    new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("}", KeyWordType.BracketClosed)
-                }, VariableType.Vector2, (objs) =>
-                {
-                    return new Vector2((double)objs[0], (double)objs[1]);
-                }));
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord("{", KeyWordType.BracketOpen),
-                    new KeyWord(VariableType.Double),
-                    new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
-                    new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("}", KeyWordType.BracketClosed)
-                }, VariableType.Vector3, (objs) =>
-                {
-                    return new Vector3((double)objs[0], (double)objs[1], (double)objs[2]);
-                }));
-
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord("+", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
-                {
-                    return (int)objs[0] + (int)objs[1];
-                }));
-
-            Syntax.Syntaxes.Add(new Syntax(
             new KeyWord[]
             {
                 new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word),
@@ -75,72 +37,10 @@ namespace CustomConsole
                 throw new Exception();
             }));
 
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] - (double)objs[1];
-                }));
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("+", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] + (double)objs[1];
-                }));
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("*", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] * (double)objs[1];
-                }));
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("/", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] / (double)objs[1];
-                }));
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("%", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] % (double)objs[1];
-                }));
-
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord("*", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
-                {
-                    return (int)objs[0] * (int)objs[1];
-                }));
-
             Executable e;
             try
             {
-                e = Syntax.Decode("true".FindKeyWords());
+                e = Syntax.Decode("{4, 3} - {3,2}".FindKeyWords());
             }
             catch (ConsoleException ex)
             {

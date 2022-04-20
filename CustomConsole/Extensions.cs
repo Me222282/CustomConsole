@@ -29,7 +29,6 @@ namespace CustomConsole
             bool newWord = true;
             bool inNumber = false;
             bool inText = false;
-            bool inSpecial = false;
 
             bool inString = false;
             bool inChar = false;
@@ -47,7 +46,6 @@ namespace CustomConsole
                     newWord = true;
                     inNumber = false;
                     inText = false;
-                    inSpecial = false;
 
                     if (word.Length > 0)
                     {
@@ -64,7 +62,6 @@ namespace CustomConsole
                     newWord = true;
                     inNumber = false;
                     inText = false;
-                    inSpecial = false;
 
                     if (word.Length > 0)
                     {
@@ -81,7 +78,6 @@ namespace CustomConsole
                     newWord = true;
                     inNumber = false;
                     inText = false;
-                    inSpecial = false;
 
                     if (word.Length > 0)
                     {
@@ -156,11 +152,7 @@ namespace CustomConsole
                     }
                     if (!char.IsWhiteSpace(c))
                     {
-                        newWord = false;
-                        inSpecial = true;
-                        type = KeyWordType.Special;
-
-                        word.Append(c);
+                        keywords.Add(new KeyWord(c.ToString(), KeyWordType.Special));
 
                         continue;
                     }
@@ -186,18 +178,6 @@ namespace CustomConsole
                     inText = false;
 
                     keywords.Add(new KeyWord(word.ToString(), KeyWordType.Word));
-                    word.Clear();
-
-                    i--;
-                    continue;
-                }
-
-                if (inSpecial && (char.IsWhiteSpace(c) || char.IsNumber(c) || char.IsLetter(c)))
-                {
-                    newWord = true;
-                    inSpecial = false;
-
-                    keywords.Add(new KeyWord(word.ToString(), KeyWordType.Special));
                     word.Clear();
 
                     i--;
@@ -317,6 +297,19 @@ namespace CustomConsole
             foreach (T element in source)
                 if (comparer.Equals(element, value)) return true;
             return false;
+        }
+        public static int FindLastIndex<T>(this ReadOnlySpan<T> source, Predicate<T> match)
+        {
+            // Code sourced from dotnet - System.Collections.Generic.List<T>.FindLastIndex(int, int, Predicate<T>)
+            for (int i = source.Length - 1; i >= 0; i--)
+            {
+                if (match(source[i]))
+                {
+                    return i;
+                }
+            }
+
+            return source.Length;
         }
 
         public static bool EqualKeyWords(this ISyntax l, ISyntax r)
