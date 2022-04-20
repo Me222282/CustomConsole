@@ -11,13 +11,65 @@ namespace CustomConsole
     {
         static void Main()
         {
-            Core.Init();
+            /*Core.Init();
             
             Program window = new Program(800, 500, Terminal.Directory);
 
             window.Run();
             
-            Core.Terminate();
+            Core.Terminate();*/
+
+            Syntax.Syntaxes.Add(new IntegerSyntax());
+
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("+", KeyWordType.Special),
+                    new KeyWord(VariableType.Int),
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] + (int)objs[1];
+                }));
+
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
+                    new KeyWord(VariableType.Double),
+                    new KeyWord("+", KeyWordType.Special),
+                    new KeyWord(VariableType.Double),
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)objs[0] + (double)objs[1];
+                }));
+
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
+                    new KeyWord("(", KeyWordType.BracketOpen),
+                    new KeyWord("double", KeyWordType.Word),
+                    new KeyWord(")", KeyWordType.BracketClosed),
+                    new KeyWord(VariableType.Int),
+                }, VariableType.Double, (objs) =>
+                {
+                    return (double)(int)objs[0];
+                }));
+
+            Syntax.Syntaxes.Add(new Syntax(
+                new KeyWord[]
+                {
+                    new KeyWord(VariableType.Int),
+                    new KeyWord("*", KeyWordType.Special),
+                    new KeyWord(VariableType.Int),
+                }, VariableType.Int, (objs) =>
+                {
+                    return (int)objs[0] * (int)objs[1];
+                }));
+
+            Executable e = Syntax.Decode("(double)2 + (double)5 + 2".FindKeyWords());
+
+            Console.WriteLine(e.Execute());
+            Console.ReadLine();
         }
         
         public Program(int width, int height, string title)

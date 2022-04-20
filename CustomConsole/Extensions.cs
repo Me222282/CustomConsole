@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -272,5 +273,49 @@ namespace CustomConsole
         }
         public static string CreateCode(this Executable executable)
             => CreateCode(executable.CompleteSyntax, executable.Source.DisplayFormat);
+
+        public static bool Compatable(this VariableType a, VariableType b)
+        {
+            return a switch
+            {
+                VariableType.Any => true,
+                VariableType.NonVoid => b != VariableType.Void,
+
+                VariableType.Double => b == VariableType.Double ||
+                    b == VariableType.Float ||
+                    b == VariableType.Int,
+
+                VariableType.Float => b == VariableType.Float ||
+                    b == VariableType.Int,
+
+                VariableType.Vector2 => b == VariableType.Vector2 ||
+                    b == VariableType.Vector3,
+
+                _ => a == b,
+            };
+        }
+
+        public static bool Contains<T>(this ReadOnlySpan<T> source, T value)
+        {
+            // Code sourced from dotnet - System.Linq.Enumerable.Contains<TSource>(IEnumerable<TSource>, TSource, IEqualityComparer<TSource>)
+            IEqualityComparer<T> comparer = EqualityComparer<T>.Default;
+            foreach (T element in source)
+                if (comparer.Equals(element, value)) return true;
+            return false;
+        }
+
+        public static bool EqualKeyWords(this ISyntax l, ISyntax r)
+        {
+            // Not equal lengths
+            if (l.Keywords.Length != r.Keywords.Length) { return false; }
+
+            for (int i = 0; i < l.Keywords.Length; i++)
+            {
+                // Only equal keywords
+                if (l.Keywords[i].Word != r.Keywords[i].Word) { return false; }
+            }
+
+            return true;
+        }
     }
 }

@@ -13,13 +13,13 @@ namespace CustomConsole
             Handle = handle;
 
             // Keywords contain an input of any type
-            ContainsInput = keywords.Contains(KeyWord.UnknownInput);
+            InputCount = keywords.Count(k => k == KeyWord.UnknownInput);
         }
 
         public KeyWord[] Keywords { get; }
         public ExecuteHandle Handle { get; }
         public VariableType ReturnType { get; }
-        public bool ContainsInput { get; }
+        public int InputCount { get; }
 
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
@@ -32,9 +32,11 @@ namespace CustomConsole
             for (int i = 0; i < code.Length; i++)
             {
                 // Input text - need to find next keyword
-                if (Keywords[wordIndex].Word == "") { wordIndex++; }
+                if (Keywords.Length > wordIndex &&
+                    Keywords[wordIndex].Word == "") { wordIndex++; }
 
-                if (code[i].Word == Keywords[wordIndex].Word)
+                if (Keywords.Length > wordIndex &&
+                    code[i].Word == Keywords[wordIndex].Word)
                 {
                     // Reached end of this syntaxes keywords but not the end of the code,
                     // the current keyword match is incorrect
@@ -58,33 +60,70 @@ namespace CustomConsole
                 return false;
             }
 
-            return true;
+            return wordIndex == Keywords.Length;
+        }
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, out int index, object param)
+        {
+            bool fill = param is bool b && b;
+
+            index = 0;
+
+            if (code.Length == 0) { return null; }
+
+            int inputIndex = 0;
+            Executable[] subExes = new Executable[InputCount];
+
+            for (int i = 0; i < Keywords.Length; i++)
+            {
+                // Input
+                if (Keywords[i].Type == KeyWordType.Input)
+                {
+                    KeyWord nextKW = new KeyWord();
+                    if (Keywords.Length > (i + 1))
+                    {
+                        nextKW = Keywords[i + 1];
+                    }
+
+                    Executable e = FindCorrectSyntax(code[index..], this, Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
+                    index += addIndex;
+
+                    // No valid syntax to match input could be found
+                    if (e == null) { return null; }
+
+                    subExes[inputIndex] = e;
+                    inputIndex++;
+                    continue;
+                }
+
+                // Syntax doesn't match
+                if (code[index].Word != Keywords[i].Word)
+                {
+                    return null;
+                }
+
+                index++;
+            }
+
+            return new Executable(this, Keywords, subExes, Handle);
         }
 
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code)
         {
-            if (!ContainsInput)
-            {
-                return new Executable(this, Keywords, null, Handle);
-            }
+            Executable e = CorrectSyntax(code, out int i, true);
 
-            // Find the sections that are other syntax
-            // Find the most valid syntax from those keywords
-            // Create instance of those sub syntax to use in this instance
+            // Not correct syntax
+            if (code.Length != i) { return null; }
 
-            return new Executable(this, Keywords, null, Handle);
+            return e;
         }
 
         public static List<ISyntax> Syntaxes { get; } = new List<ISyntax>();
-        public static ExecultableSyntax FindSyntax(ReadOnlySpan<KeyWord> syntax, VariableType returnType = VariableType.Any)
+        public static Executable Decode(ReadOnlySpan<KeyWord> syntax, VariableType returnType = VariableType.Any)
         {
             for (int i = 0; i < Syntaxes.Count; i++)
             {
                 // Doesn't return correct type
-                if ((returnType & Syntaxes[i].ReturnType) != Syntaxes[i].ReturnType)
-                {
-                    continue;
-                }
+                if (!returnType.Compatable(Syntaxes[i].ReturnType)) { continue; }
 
                 bool could = Syntaxes[i].ValidSyntax(syntax);
 
@@ -94,23 +133,57 @@ namespace CustomConsole
 
                     if (e == null) { continue; }
 
-                    return new ExecultableSyntax(e, Syntaxes[i]);
+                    if (e.Source != Syntaxes[i])
+                    {
+                        throw new Exception("Invalid return from syntax");
+                    }
+
+                    return e;
                 }
             }
 
             throw new ConsoleException("Unknown syntax");
         }
-    }
 
-    public struct ExecultableSyntax
-    {
-        public ExecultableSyntax(Executable e, ISyntax s)
+        public static Executable FindCorrectSyntax(ReadOnlySpan<KeyWord> syntax, ISyntax source, VariableType returnType, KeyWord nextWord, bool fill, out int nextIndex)
         {
-            Executable = e;
-            Syntax = s;
-        }
+            nextIndex = 0;
 
-        public Executable Executable { get; }
-        public ISyntax Syntax { get; }
+            if (nextWord.Word != null && !syntax.Contains(nextWord)) { return null; }
+
+            for (int i = 0; i < Syntaxes.Count; i++)
+            {
+                if (!fill && Syntaxes[i].EqualKeyWords(source)) { continue; }
+
+                // Doesn't return correct type
+                if (!returnType.Compatable(Syntaxes[i].ReturnType)) { continue; }
+
+                Executable e = Syntaxes[i].CorrectSyntax(syntax, out nextIndex, fill);
+
+                // Not correct syntax
+                if (e == null) { continue; }
+
+                // Syntax needs to decode all the keywords
+                if (fill && nextIndex != syntax.Length) { continue; }
+
+                // There is a next keyword
+                if (!fill && nextWord.Word != null &&
+
+                    // Syntax is long enough
+                    ((syntax.Length > nextIndex &&
+                    // Next keyword doesn't match
+                    syntax[nextIndex] != nextWord) ||
+
+                    // Syntax isn't long enough
+                    syntax.Length < (nextIndex + 1)))
+                {
+                    continue;
+                }
+
+                return e;
+            }
+
+            return null;
+        }
     }
 }

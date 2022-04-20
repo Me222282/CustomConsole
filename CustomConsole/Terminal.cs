@@ -11,19 +11,20 @@ namespace CustomConsole
 
     public enum VariableType
     {
-        Int = 0b_0000_0000_0010,
-        Float = 0b_0000_0000_0100 | Int,
-        Double = 0b_0000_0000_1000 | Float | Int,
-        String = 0b_0000_0001_0000,
-        Char = 0b_0000_0010_0000,
-        Bool = 0b_0000_0100_0000,
+        Void = 0,
 
-        Vector2 = 0b_0000_1000_0000 | Vector3,
-        Vector3 = 0b_0001_0000_0000,
+        Int,
+        Float,
+        Double,
+        String,
+        Char,
+        Bool,
 
-        Void = 0b_0000_0001,
-        NonVoid = Int | Float | Double | String | Char | Bool | Vector2 | Vector3,
-        Any = NonVoid | Void
+        Vector2,
+        Vector3,
+
+        NonVoid,
+        Any
     }
 
     public static class Terminal
