@@ -53,6 +53,18 @@ namespace CustomConsole
                 // Empty string means input syntax - it could be any length
                 if ((wordIndex - 1 >= 0) && Keywords[wordIndex - 1].Word == "")
                 {
+                    if (code[i].Word == "(")
+                    {
+                        int end = FindClosingBracket(code, i);
+
+                        if (end == -1)
+                        {
+                            throw new ConsoleException("Invalid syntax - no closing bracket");
+                        }
+
+                        i = end;
+                    }
+
                     continue;
                 }
 
@@ -62,7 +74,7 @@ namespace CustomConsole
 
             return wordIndex == Keywords.Length;
         }
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, out int index, object param)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param)
         {
             bool fill = param is bool b && b;
 
@@ -107,9 +119,9 @@ namespace CustomConsole
             return new Executable(this, Keywords, subExes, Handle);
         }
 
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
         {
-            Executable e = CorrectSyntax(code, out int i, true);
+            Executable e = CorrectSyntax(code, type, out int i, true);
 
             // Not correct syntax
             if (code.Length != i) { return null; }
@@ -129,7 +141,7 @@ namespace CustomConsole
 
                 if (could)
                 {
-                    Executable e = Syntaxes[i].CreateInstance(syntax);
+                    Executable e = Syntaxes[i].CreateInstance(syntax, returnType);
 
                     if (e == null) { continue; }
 
@@ -142,6 +154,18 @@ namespace CustomConsole
                 }
             }
 
+            if (syntax[0].Word == "(")
+            {
+                Executable e = ManageBrackets(syntax, returnType, new KeyWord(), true, out int i);
+
+                if (i != syntax.Length)
+                {
+                    throw new ConsoleException("Unknown syntax");
+                }
+
+                return e;
+            }
+
             throw new ConsoleException("Unknown syntax");
         }
 
@@ -151,6 +175,13 @@ namespace CustomConsole
 
             if (nextWord.Word != null && !syntax.Contains(nextWord)) { return null; }
 
+            if (syntax[0].Word == "(")
+            {
+                Executable exe = ManageBrackets(syntax, returnType, nextWord, fill, out nextIndex);
+                
+                if (exe != null) { return exe; }
+            }
+
             for (int i = 0; i < Syntaxes.Count; i++)
             {
                 if (!fill && Syntaxes[i].EqualKeyWords(source)) { continue; }
@@ -158,7 +189,7 @@ namespace CustomConsole
                 // Doesn't return correct type
                 if (!returnType.Compatable(Syntaxes[i].ReturnType)) { continue; }
 
-                Executable e = Syntaxes[i].CorrectSyntax(syntax, out nextIndex, fill);
+                Executable e = Syntaxes[i].CorrectSyntax(syntax, returnType, out nextIndex, fill);
 
                 // Not correct syntax
                 if (e == null) { continue; }
@@ -185,5 +216,52 @@ namespace CustomConsole
 
             return null;
         }
+        private static Executable ManageBrackets(ReadOnlySpan<KeyWord> syntax, VariableType returnType, KeyWord nextWord, bool fill, out int nextIndex)
+        {
+            int end = FindClosingBracket(syntax, 0);
+
+            // Couldn't find closing bracket
+            if (end == -1)
+            {
+                throw new ConsoleException("Invalid syntax - no closing bracket");
+            }
+
+            nextIndex = end + 1;
+
+            // There is a next keyword
+            if (!fill && nextWord.Word != null &&
+
+                // Syntax is long enough
+                ((syntax.Length > nextIndex &&
+                // Next keyword doesn't match
+                syntax[nextIndex] != nextWord) ||
+
+                // Syntax isn't long enough
+                syntax.Length < (nextIndex + 1)))
+            {
+                return null;
+            }
+
+            ReadOnlySpan<KeyWord> bracketCode = syntax[1..end];
+
+            Executable e;
+            try { e = Decode(bracketCode, returnType); }
+            catch (ConsoleException) { return null; }
+            return e;
+        }
+        private static int FindClosingBracket(ReadOnlySpan<KeyWord> syntax, int openBrackIndex)
+        {
+            int bracketNumber = syntax[openBrackIndex].Info;
+
+            for (int i = openBrackIndex + 1; i < syntax.Length; i++)
+            {
+                // Found closing breacket
+                if (syntax[i].Word == ")" && syntax[i].Info == bracketNumber) { return i; }
+            }
+
+            return -1;
+        }
+
+        public static List<Variable> Variables { get; } = new List<Variable>();
     }
 }

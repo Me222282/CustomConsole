@@ -42,6 +42,58 @@ namespace CustomConsole
             {
                 char c = code[i];
 
+                if (!inString && !inChar && c == ')')
+                {
+                    newWord = true;
+                    inNumber = false;
+                    inText = false;
+                    inSpecial = false;
+
+                    if (word.Length > 0)
+                    {
+                        keywords.Add(new KeyWord(word.ToString(), type));
+                        word.Clear();
+                    }
+
+                    bracket--;
+                    keywords.Add(new KeyWord(")", KeyWordType.BracketClosed, bracket));
+                    continue;
+                }
+                if (!inString && !inChar && c == ']')
+                {
+                    newWord = true;
+                    inNumber = false;
+                    inText = false;
+                    inSpecial = false;
+
+                    if (word.Length > 0)
+                    {
+                        keywords.Add(new KeyWord(word.ToString(), type));
+                        word.Clear();
+                    }
+
+                    bracketSquare--;
+                    keywords.Add(new KeyWord("]", KeyWordType.BracketClosed, bracketSquare));
+                    continue;
+                }
+                if (!inString && !inChar && c == '}')
+                {
+                    newWord = true;
+                    inNumber = false;
+                    inText = false;
+                    inSpecial = false;
+
+                    if (word.Length > 0)
+                    {
+                        keywords.Add(new KeyWord(word.ToString(), type));
+                        word.Clear();
+                    }
+
+                    bracketCurle--;
+                    keywords.Add(new KeyWord("}", KeyWordType.BracketClosed, bracketCurle));
+                    continue;
+                }
+
                 if (newWord)
                 {
                     if (c == '(')
@@ -116,49 +168,6 @@ namespace CustomConsole
                     continue;
                 }
 
-                if (!inString && !inChar && c == ')')
-                {
-                    newWord = true;
-                    inNumber = false;
-                    inText = false;
-                    inSpecial = false;
-
-                    keywords.Add(new KeyWord(word.ToString(), type));
-                    word.Clear();
-
-                    bracket--;
-                    keywords.Add(new KeyWord(")", KeyWordType.BracketClosed, bracket));
-                    continue;
-                }
-                if (!inString && !inChar && c == ']')
-                {
-                    newWord = true;
-                    inNumber = false;
-                    inText = false;
-                    inSpecial = false;
-
-                    keywords.Add(new KeyWord(word.ToString(), type));
-                    word.Clear();
-                    
-                    bracketSquare--;
-                    keywords.Add(new KeyWord("]", KeyWordType.BracketClosed, bracketSquare));
-                    continue;
-                }
-                if (!inString && !inChar && c == '}')
-                {
-                    newWord = true;
-                    inNumber = false;
-                    inText = false;
-                    inSpecial = false;
-
-                    keywords.Add(new KeyWord(word.ToString(), type));
-                    word.Clear();
-
-                    bracketCurle--;
-                    keywords.Add(new KeyWord("}", KeyWordType.BracketClosed, bracketCurle));
-                    continue;
-                }
-
                 if (inNumber && c != '.' && !char.IsNumber(c))
                 {
                     newWord = true;
@@ -195,27 +204,27 @@ namespace CustomConsole
                     continue;
                 }
 
-                if (inString && c == '\"' && code[i - 1] == '\\')
+                if (inString && c == '\"' && code[i - 1] != '\\')
                 {
                     newWord = true;
                     inString = false;
 
-                    keywords.Add(new KeyWord("\"", KeyWordType.String));
-
                     keywords.Add(new KeyWord(word.ToString(), KeyWordType.String));
                     word.Clear();
 
+                    keywords.Add(new KeyWord("\"", KeyWordType.String));
+
                     continue;
                 }
-                if (inChar && c == '\'' && code[i - 1] == '\\')
+                if (inChar && c == '\'' && code[i - 1] != '\\')
                 {
                     newWord = true;
                     inChar = false;
 
-                    keywords.Add(new KeyWord("\'", KeyWordType.Char));
-
                     keywords.Add(new KeyWord(word.ToString(), KeyWordType.Char));
                     word.Clear();
+
+                    keywords.Add(new KeyWord("\'", KeyWordType.Char));
 
                     continue;
                 }
@@ -292,6 +301,12 @@ namespace CustomConsole
                     b == VariableType.Vector3,
 
                 _ => a == b,
+            } ||
+            b switch
+            {
+                VariableType.Any => true,
+                VariableType.NonVoid => a != VariableType.Void,
+                _ => false,
             };
         }
 

@@ -14,10 +14,18 @@
             Getter = get;
             Setter = set;
         }
+        public Variable(string name, VariableType type, VariableGetter get, VariableSetter set)
+        {
+            Name = name;
+            Type = type;
+            Getter = get;
+            Setter = set;
+        }
 
         public string Name { get; }
 
         public StringConverter ParamConverter { get; }
+        public VariableType Type { get; }
 
         public VariableGetter Getter { get; set; }
         public VariableSetter Setter { get; set; }

@@ -2,17 +2,16 @@
 
 namespace CustomConsole
 {
-    public class IntegerSyntax : ISyntax
+    public class DoubleSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Number) };
-        public VariableType ReturnType => VariableType.Int;
+        public VariableType ReturnType => VariableType.Double;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {
             return code.Length == 1 &&
-                code[0].Type == KeyWordType.Number &&
-                !code[0].Word.Contains('.');
+                code[0].Type == KeyWordType.Number;
         }
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
@@ -21,11 +20,11 @@ namespace CustomConsole
 
             if (code.Length == 0) { return null; }
 
-            if (int.TryParse(code[0].Word, out int i))
+            if (double.TryParse(code[0].Word, out double d))
             {
                 return new Executable(this, new KeyWord[] { code[0] }, null, objs =>
                 {
-                    return i;
+                    return d;
                 });
             }
 

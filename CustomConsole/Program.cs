@@ -20,17 +20,39 @@ namespace CustomConsole
             Core.Terminate();*/
 
             Syntax.Syntaxes.Add(new IntegerSyntax());
+            Syntax.Syntaxes.Add(new DoubleSyntax());
+            Syntax.Syntaxes.Add(new StringSyntax());
+            Syntax.Syntaxes.Add(new GetVariableSyntax());
+            Syntax.Syntaxes.Add(new SetVariableSyntax());
+
+            int bean = 5;
+            Syntax.Variables.Add(new Variable("bean", VariableType.Int, () =>
+            {
+                return bean;
+            }, objs =>
+            {
+                bean = (int)objs;
+            }));
 
             Syntax.Syntaxes.Add(new Syntax(
                 new KeyWord[]
                 {
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VariableType.Int),
                     new KeyWord("+", KeyWordType.Special),
                     new KeyWord(VariableType.Int),
-                }, VariableType.Double, (objs) =>
+                }, VariableType.Int, (objs) =>
                 {
-                    return (double)objs[0] + (int)objs[1];
+                    return (int)objs[0] + (int)objs[1];
                 }));
+
+            Syntax.Syntaxes.Add(new Syntax(
+            new KeyWord[]
+            {
+                new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word),
+            }, VariableType.Void, objs =>
+            {
+                throw new Exception();
+            }));
 
             Syntax.Syntaxes.Add(new Syntax(
                 new KeyWord[]
@@ -46,18 +68,6 @@ namespace CustomConsole
             Syntax.Syntaxes.Add(new Syntax(
                 new KeyWord[]
                 {
-                    new KeyWord("(", KeyWordType.BracketOpen),
-                    new KeyWord("double", KeyWordType.Word),
-                    new KeyWord(")", KeyWordType.BracketClosed),
-                    new KeyWord(VariableType.Int),
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)(int)objs[0];
-                }));
-
-            Syntax.Syntaxes.Add(new Syntax(
-                new KeyWord[]
-                {
                     new KeyWord(VariableType.Int),
                     new KeyWord("*", KeyWordType.Special),
                     new KeyWord(VariableType.Int),
@@ -66,7 +76,17 @@ namespace CustomConsole
                     return (int)objs[0] * (int)objs[1];
                 }));
 
-            Executable e = Syntax.Decode("(double)2 + (double)5 + 2".FindKeyWords());
+            Executable e;
+            try
+            {
+                e = Syntax.Decode("(bean = ((5) + (2)))".FindKeyWords());
+            }
+            catch (ConsoleException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadLine();
+                return;
+            }
 
             Console.WriteLine(e.Execute());
             Console.ReadLine();
