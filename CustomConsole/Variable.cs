@@ -21,11 +21,21 @@
             Getter = get;
             Setter = set;
         }
+        public Variable(string name, VariableType type, object value)
+        {
+            Name = name;
+            Type = type;
+            _value = value;
+            Getter = () => value;
+            Setter = obj => value = obj;
+        }
 
         public string Name { get; }
 
         public StringConverter ParamConverter { get; }
         public VariableType Type { get; }
+
+        private object _value;
 
         public VariableGetter Getter { get; set; }
         public VariableSetter Setter { get; set; }

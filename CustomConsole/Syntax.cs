@@ -363,6 +363,8 @@ namespace CustomConsole
                 new BoolSyntax(),
                 new GetVariableSyntax(),
                 new SetVariableSyntax(),
+                new CreateVariableSyntax(),
+                new RemoveVariableSyntax(),
 
                 // Vector2
                 new Syntax(new KeyWord[]
@@ -407,6 +409,9 @@ namespace CustomConsole
                     return new Vector4((double)objs[0], (double)objs[1], (double)objs[2], (double)objs[3]);
                 }),
 
+                //
+                // Integer Operators
+                //
                 new TypedSyntax(new KeyWord[]
                 {
                     new KeyWord(VariableType.NonVoid),
@@ -485,7 +490,9 @@ namespace CustomConsole
                     };
                 }),
 
-
+                //
+                // Normal Operators
+                //
                 new TypedSyntax(new KeyWord[]
                 {
                     new KeyWord(VariableType.NonVoid),
@@ -587,6 +594,9 @@ namespace CustomConsole
                     };
                 }),
 
+                //
+                // Extra Operators
+                //
                 new TypedSyntax(new KeyWord[]
                 {
                     new KeyWord("-", KeyWordType.Special),
