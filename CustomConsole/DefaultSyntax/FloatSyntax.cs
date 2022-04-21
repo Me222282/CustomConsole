@@ -31,9 +31,10 @@ namespace CustomConsole
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
         {
-            index = 1;
+            index = 2;
 
-            if (code.Length < 2 || code[1].Word != "f") { return null; }
+            if (code.Length < 2) { return null; }
+            if (code[1].Word != "f") { return null; }
 
             if (float.TryParse(code[0].Word, out float f))
             {

@@ -96,6 +96,13 @@ namespace CustomConsole
                         @params[i] = (double)@int;
                     }
                 }
+                if (@params[i] is float @float)
+                {
+                    if (_inputTypes[i] == VariableType.Double)
+                    {
+                        @params[i] = (double)@float;
+                    }
+                }
                 else if (@params[i] is Vector3 vector3)
                 {
                     if (_inputTypes[i] == VariableType.Vector2)

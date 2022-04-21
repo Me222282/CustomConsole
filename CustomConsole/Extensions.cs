@@ -263,8 +263,62 @@ namespace CustomConsole
         public static string CreateCode(this Executable executable)
             => CreateCode(executable.CompleteSyntax, executable.Source.DisplayFormat);
 
+        public static VariableType? GetHigherType(this VariableType a, VariableType b)
+        {
+            VariableType? vart = RightOverLeft(a, b);
+            /*
+            if (vart == null) { return RightOverLeft(b, a); }
+            else { return vart; }*/
+
+            // a to b is null
+            return vart ??
+                // b to a is null
+                RightOverLeft(b, a) ??
+                // a and b arn't compatable
+                (a != b ? null : a);
+        }
+        private static VariableType? RightOverLeft(VariableType a, VariableType b)
+        {
+            if (a == VariableType.NonVoid || a == VariableType.Any) { return b; }
+            if (b == VariableType.NonVoid || b == VariableType.Any) { return a; }
+
+            switch (a)
+            {
+                case VariableType.Int:
+                    if (b == VariableType.Int || b == VariableType.Float || b == VariableType.Double)
+                    {
+                        return b;
+                    }
+                    return null;
+
+                case VariableType.Float:
+                    if (b == VariableType.Float || b == VariableType.Double)
+                    {
+                        return b;
+                    }
+                    return null;
+
+                case VariableType.Vector2:
+                    if (b == VariableType.Vector2 || b == VariableType.Vector3 || b == VariableType.Vector4)
+                    {
+                        return b;
+                    }
+                    return null;
+
+                case VariableType.Vector3:
+                    if (b == VariableType.Vector3 || b == VariableType.Vector4)
+                    {
+                        return b;
+                    }
+                    return null;
+            }
+
+            return null;
+        }
+
         public static bool Compatable(this VariableType a, VariableType b)
         {
+            /*
             return a switch
             {
                 VariableType.Any => true,
@@ -291,7 +345,9 @@ namespace CustomConsole
                 VariableType.Any => true,
                 VariableType.NonVoid => a != VariableType.Void,
                 _ => false,
-            };
+            };*/
+
+            return a.GetHigherType(b) != null;
         }
 
         public static bool Contains<T>(this ReadOnlySpan<T> source, T value)

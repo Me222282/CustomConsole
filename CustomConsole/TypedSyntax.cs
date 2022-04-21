@@ -123,15 +123,13 @@ namespace CustomConsole
 
             index = 0;
 
-            // Type not accepted
-            if (!ValidType(type)) { return null; }
-
             if (code.Length == 0) { return null; }
 
             int inputIndex = 0;
-            Executable[] subExes = new Executable[InputCount + 1];
+            Executable[] subExes = new Executable[InputCount];
 
-            VariableType expectedType = type;
+            VariableType[] inputTypes = new VariableType[InputCount];
+            VariableType highestType = type;
 
             for (int i = 0; i < Keywords.Length; i++)
             {
@@ -150,23 +148,26 @@ namespace CustomConsole
                             lastI + 1 > slice.Length ? lastI : (lastI + 1));
                     }
 
-                    Executable e = Syntax.FindCorrectSyntax(slice, this, VariableType.NonVoid, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
+                    Executable e = Syntax.FindCorrectSyntax(slice, this, Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
                     index += addIndex;
 
                     // No valid syntax to match input could be found
                     if (e == null) { return null; }
 
-                    VariableType vart = GetHigherType(expectedType, GetReturnType(e));
-                    if (vart < 0) { return null; }
-                    expectedType = vart;
-
-                    // First input
-                    if (inputIndex == 0 &&
-                        e.Source.ReturnType != VariableType.NonVoid &&
-                        e.Source.ReturnType != VariableType.Any)
+                    if (Keywords[i].InputType == VariableType.NonVoid)
                     {
-                        expectedType = e.Source.ReturnType;
+                        VariableType vart = GetReturnType(e);
+                        // Type not accepted
+                        if (!ValidType(vart)) { return null; }
+
+                        VariableType? vartn = highestType.GetHigherType(vart);
+                        // Type not accepted
+                        if (vartn == null) { return null; }
+
+                        highestType = (VariableType)vartn;
                     }
+
+                    inputTypes[inputIndex] = Keywords[i].InputType;
 
                     subExes[inputIndex] = e;
                     inputIndex++;
@@ -174,89 +175,38 @@ namespace CustomConsole
                 }
 
                 // Syntax doesn't match
-                if (code[index].Word != Keywords[i].Word)
-                {
-                    return null;
-                }
+                if (code[index].Word != Keywords[i].Word) { return null; }
 
                 index++;
             }
 
-            VariableType[] vartary = GetArray(InputCount, expectedType);
+            // Replace typed input types with highest type
+            for (int i = 0; i < inputTypes.Length; i++)
+            {
+                if (inputTypes[i] == VariableType.NonVoid)
+                {
+                    inputTypes[i] = highestType;
+                }
+            }
 
-            // The passes type that this instance contains
-            subExes[^1] = new Executable(this, null, null, _ => expectedType, vartary);
-
-            return new Executable(this, Keywords, subExes, Handle, vartary);
+            return new Executable(this, Keywords, subExes, Handle, inputTypes);
         }
 
         private static VariableType GetReturnType(Executable e)
         {
             if (e.Source is TypedSyntax)
             {
-                return (VariableType)e.SubExecutables[^1].Execute();
+                VariableType current = VariableType.Any;
+
+                for (int i = 1; i < e.SubExecutables.Length; i++)
+                {
+                    VariableType? vartn = current.GetHigherType(GetReturnType(e.SubExecutables[i]));
+
+                    current = vartn ?? throw new BigException();
+                }
             }
 
             return e.Source.ReturnType;
-        }
-        private static VariableType GetHigherType(VariableType old, VariableType @new)
-        {
-            if (old == VariableType.Any || old == VariableType.NonVoid)
-            {
-                return @new;
-            }
-
-            if (old.Compatable(@new)) { return old; }
-
-            switch (old)
-            {
-                case VariableType.Int:
-                    if (@new == VariableType.Float)
-                    {
-                        return VariableType.Float;
-                    }
-                    if (@new == VariableType.Double)
-                    {
-                        return VariableType.Double;
-                    }
-                    break;
-
-                case VariableType.Float:
-                    if (@new == VariableType.Double)
-                    {
-                        return VariableType.Double;
-                    }
-                    break;
-
-                case VariableType.Vector3:
-                    if (@new == VariableType.Vector2)
-                    {
-                        return VariableType.Vector2;
-                    }
-                    break;
-
-                case VariableType.Vector4:
-                    if (@new == VariableType.Vector3)
-                    {
-                        return VariableType.Vector3;
-                    }
-                    if (@new == VariableType.Vector2)
-                    {
-                        return VariableType.Vector2;
-                    }
-                    break;
-            }
-
-            return (VariableType)(-1);
-        }
-
-        private static VariableType[] GetArray(int count, VariableType value)
-        {
-            VariableType[] array = new VariableType[count];
-
-            Array.Fill(array, value);
-
-            return array;
         }
 
         private bool ValidType(VariableType type)

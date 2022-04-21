@@ -422,9 +422,10 @@ namespace CustomConsole
                     VariableType.Int,
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => (int)objs[0] | (int)objs[1],
+                        int => (int)objs[0] | (int)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
                 new TypedSyntax(new KeyWord[]
@@ -437,9 +438,10 @@ namespace CustomConsole
                     VariableType.Int,
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => (int)objs[0] & (int)objs[1],
+                        int => (int)objs[0] & (int)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
                 new TypedSyntax(new KeyWord[]
@@ -453,9 +455,10 @@ namespace CustomConsole
                     VariableType.Int,
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => (int)objs[0] >> (int)objs[1],
+                        int => (int)objs[0] >> (int)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
                 new TypedSyntax(new KeyWord[]
@@ -469,9 +472,10 @@ namespace CustomConsole
                     VariableType.Int,
                 }, (objs) =>
                 {
-                    return (VariableType)objs[2] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => (int)objs[0] << (int)objs[1],
+                        int => (int)objs[0] << (int)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
                 new TypedSyntax(new KeyWord[]
@@ -484,9 +488,10 @@ namespace CustomConsole
                     VariableType.Int,
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => (int)objs[0] ^ (int)objs[1],
+                        int => (int)objs[0] ^ (int)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
 
@@ -508,14 +513,15 @@ namespace CustomConsole
                     VariableType.Vector4
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => (int)objs[0] - (int)objs[1],
-                        VariableType.Double => (double)objs[0] - (double)objs[1],
-                        VariableType.Float => (float)objs[0] - (float)objs[1],
-                        VariableType.Vector2 => (Vector2)objs[0] - (Vector2)objs[1],
-                        VariableType.Vector3 => (Vector3)objs[0] - (Vector3)objs[1],
-                        VariableType.Vector4 => (Vector4)objs[0] - (Vector4)objs[1],
+                        int => (int)objs[0] - (int)objs[1],
+                        double => (double)objs[0] - (double)objs[1],
+                        float => (float)objs[0] - (float)objs[1],
+                        Vector2 => (Vector2)objs[0] - (Vector2)objs[1],
+                        Vector3 => (Vector3)objs[0] - (Vector3)objs[1],
+                        Vector4 => (Vector4)objs[0] - (Vector4)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
                 new TypedSyntax(new KeyWord[]
@@ -533,6 +539,7 @@ namespace CustomConsole
                     VariableType.Vector4
                 }, (objs) =>
                 {
+                    /*
                     return (VariableType)objs[^1] switch
                     {
                         VariableType.Int => (int)objs[0] + (int)objs[1],
@@ -541,6 +548,17 @@ namespace CustomConsole
                         VariableType.Vector2 => (Vector2)objs[0] + (Vector2)objs[1],
                         VariableType.Vector3 => (Vector3)objs[0] + (Vector3)objs[1],
                         VariableType.Vector4 => (Vector4)objs[0] + (Vector4)objs[1],
+                    };*/
+
+                    return objs[0] switch
+                    {
+                        int => (int)objs[0] + (int)objs[1],
+                        double => (double)objs[0] + (double)objs[1],
+                        float => (float)objs[0] + (float)objs[1],
+                        Vector2 => (Vector2)objs[0] + (Vector2)objs[1],
+                        Vector3 => (Vector3)objs[0] + (Vector3)objs[1],
+                        Vector4 => (Vector4)objs[0] + (Vector4)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
                 new TypedSyntax(new KeyWord[]
@@ -558,14 +576,15 @@ namespace CustomConsole
                     VariableType.Vector4
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => (int)objs[0] * (int)objs[1],
-                        VariableType.Double => (double)objs[0] * (double)objs[1],
-                        VariableType.Float => (float)objs[0] * (float)objs[1],
-                        VariableType.Vector2 => (Vector2)objs[0] * (Vector2)objs[1],
-                        VariableType.Vector3 => (Vector3)objs[0] * (Vector3)objs[1],
-                        VariableType.Vector4 => (Vector4)objs[0] * (Vector4)objs[1],
+                        int => (int)objs[0] * (int)objs[1],
+                        double => (double)objs[0] * (double)objs[1],
+                        float => (float)objs[0] * (float)objs[1],
+                        Vector2 => (Vector2)objs[0] * (Vector2)objs[1],
+                        Vector3 => (Vector3)objs[0] * (Vector3)objs[1],
+                        Vector4 => (Vector4)objs[0] * (Vector4)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
                 new TypedSyntax(new KeyWord[]
@@ -583,14 +602,15 @@ namespace CustomConsole
                     VariableType.Vector4
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => (int)objs[0] / (int)objs[1],
-                        VariableType.Double => (double)objs[0] / (double)objs[1],
-                        VariableType.Float => (float)objs[0] / (float)objs[1],
-                        VariableType.Vector2 => (Vector2)objs[0] / (Vector2)objs[1],
-                        VariableType.Vector3 => (Vector3)objs[0] / (Vector3)objs[1],
-                        VariableType.Vector4 => (Vector4)objs[0] / (Vector4)objs[1],
+                        int => (int)objs[0] / (int)objs[1],
+                        double => (double)objs[0] / (double)objs[1],
+                        float => (float)objs[0] / (float)objs[1],
+                        Vector2 => (Vector2)objs[0] / (Vector2)objs[1],
+                        Vector3 => (Vector3)objs[0] / (Vector3)objs[1],
+                        Vector4 => (Vector4)objs[0] / (Vector4)objs[1],
+                        _ => throw new BigException()
                     };
                 }),
 
@@ -611,14 +631,15 @@ namespace CustomConsole
                     VariableType.Vector4
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => -(int)objs[0],
-                        VariableType.Double => -(double)objs[0],
-                        VariableType.Float => -(float)objs[0],
-                        VariableType.Vector2 => -(Vector2)objs[0],
-                        VariableType.Vector3 => -(Vector3)objs[0],
-                        VariableType.Vector4 => -(Vector4)objs[0],
+                        int => -(int)objs[0],
+                        double => -(double)objs[0],
+                        float => -(float)objs[0],
+                        Vector2 => -(Vector2)objs[0],
+                        Vector3 => -(Vector3)objs[0],
+                        Vector4 => -(Vector4)objs[0],
+                        _ => throw new BigException()
                     };
                 }),
                 new TypedSyntax(new KeyWord[]
@@ -633,11 +654,12 @@ namespace CustomConsole
                     VariableType.Float
                 }, (objs) =>
                 {
-                    return (VariableType)objs[^1] switch
+                    return objs[0] switch
                     {
-                        VariableType.Int => Math.Abs((int)objs[0]),
-                        VariableType.Double => Math.Abs((double)objs[0]),
-                        VariableType.Float => Math.Abs((float)objs[0])
+                        int => Math.Abs((int)objs[0]),
+                        double => Math.Abs((double)objs[0]),
+                        float => Math.Abs((float)objs[0]),
+                        _ => throw new BigException()
                     };
                 }),
             };

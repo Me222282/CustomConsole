@@ -32,7 +32,7 @@ namespace CustomConsole
             Stopwatch s = new Stopwatch();
             s.Start();
 
-            KeyWord[] kws = "memory.Collect(bean)".FindKeyWords();
+            KeyWord[] kws = "5.3d + 5.2f".FindKeyWords();
 
             Executable e;
             try
