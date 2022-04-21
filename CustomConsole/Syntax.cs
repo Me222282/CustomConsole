@@ -409,6 +409,21 @@ namespace CustomConsole
                     return new Vector4((double)objs[0], (double)objs[1], (double)objs[2], (double)objs[3]);
                 }),
 
+                // String constructor
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("new", KeyWordType.BracketOpen),
+                    new KeyWord("string", KeyWordType.BracketOpen),
+                    new KeyWord("(", KeyWordType.BracketOpen),
+                    new KeyWord(VariableType.Char),
+                    new KeyWord(",", KeyWordType.Special),
+                    new KeyWord(VariableType.Int),
+                    new KeyWord(")", KeyWordType.BracketClosed)
+                }, VariableType.String, (objs) =>
+                {
+                    return new string((char)objs[0], (int)objs[1]);
+                }),
+
                 //
                 // Integer Operators
                 //
@@ -534,6 +549,8 @@ namespace CustomConsole
                     VariableType.Int,
                     VariableType.Double,
                     VariableType.Float,
+                    VariableType.String,
+                    VariableType.Char,
                     VariableType.Vector2,
                     VariableType.Vector3,
                     VariableType.Vector4
@@ -555,6 +572,8 @@ namespace CustomConsole
                         int => (int)objs[0] + (int)objs[1],
                         double => (double)objs[0] + (double)objs[1],
                         float => (float)objs[0] + (float)objs[1],
+                        string => (string)objs[0] + (string)objs[1],
+                        char => $"{(char)objs[0]}{(char)objs[1]}",
                         Vector2 => (Vector2)objs[0] + (Vector2)objs[1],
                         Vector3 => (Vector3)objs[0] + (Vector3)objs[1],
                         Vector4 => (Vector4)objs[0] + (Vector4)objs[1],

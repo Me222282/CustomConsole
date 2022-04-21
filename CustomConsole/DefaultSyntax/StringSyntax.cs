@@ -22,7 +22,7 @@ namespace CustomConsole
         }
         public bool PossibleSyntax(ReadOnlySpan<KeyWord> code)
         {
-            return code.Contains(new KeyWord("\"", KeyWordType.Char));
+            return code.Contains(new KeyWord("\"", KeyWordType.String));
         }
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
