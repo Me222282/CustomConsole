@@ -5,7 +5,7 @@ namespace CustomConsole
     public class DoubleSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Number) };
-        public VariableType[] InputTypes => null;
+        public int InputCount => 0;
         public VariableType ReturnType => VariableType.Double;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
@@ -18,6 +18,18 @@ namespace CustomConsole
             }
 
             return code[0].Type == KeyWordType.Number;
+        }
+        public bool PossibleSyntax(ReadOnlySpan<KeyWord> code)
+        {
+            for (int i = 0; i < code.Length; i++)
+            {
+                if (code[i].Type == KeyWordType.Number)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
@@ -33,10 +45,10 @@ namespace CustomConsole
 
             if (double.TryParse(code[0].Word, out double d))
             {
-                return new Executable(this, new KeyWord[] { code[0] }, null, objs =>
+                return new Executable(this, new KeyWord[] { code[0] }, null, _ =>
                 {
                     return d;
-                });
+                }, null);
             }
 
             return null;

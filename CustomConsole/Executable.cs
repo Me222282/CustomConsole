@@ -8,7 +8,7 @@ namespace CustomConsole
 
     public class Executable
     {
-        public Executable(ISyntax src, KeyWord[] syntax, Executable[] subExecutables, ExecuteHandle handle)
+        public Executable(ISyntax src, KeyWord[] syntax, Executable[] subExecutables, ExecuteHandle handle, VariableType[] inputTypes)
         {
             Source = src ?? throw new Exception($"{nameof(src)} cannot be null.");
 
@@ -31,11 +31,21 @@ namespace CustomConsole
             }
 
             Function = handle ?? throw new Exception($"{nameof(handle)} cannot be null.");
+
+            if ((inputTypes == null && Source.InputCount != 0) ||
+                (inputTypes != null && Source.InputCount != inputTypes.Length))
+            {
+                throw new Exception("Invalid input types - not correct length");
+            }
+
+            _inputTypes = inputTypes;
         }
 
         public ISyntax Source { get; }
         public KeyWord[] Syntax { get; }
         public Executable[] SubExecutables { get; }
+
+        private readonly VariableType[] _inputTypes;
 
         public KeyWord[] CompleteSyntax
         {
@@ -67,7 +77,7 @@ namespace CustomConsole
 
         public ExecuteHandle Function { get; }
 
-        public object Execute()
+        public virtual object Execute()
         {
             object[] @params = new object[SubExecutables.Length];
 
@@ -75,23 +85,33 @@ namespace CustomConsole
             {
                 @params[i] = SubExecutables[i].Execute();
 
-                if (@params[i] is int)
+                if (@params[i] is int @int)
                 {
-                    if (Source.InputTypes[i] == VariableType.Float)
+                    if (_inputTypes[i] == VariableType.Float)
                     {
-                        @params[i] = (float)(int)@params[i];
+                        @params[i] = (float)@int;
                     }
-                    else if (Source.InputTypes[i] == VariableType.Double)
+                    else if (_inputTypes[i] == VariableType.Double)
                     {
-                        @params[i] = (double)(int)@params[i];
+                        @params[i] = (double)@int;
                     }
                 }
-
-                if (@params[i] is Vector3)
+                else if (@params[i] is Vector3 vector3)
                 {
-                    if (Source.InputTypes[i] == VariableType.Vector2)
+                    if (_inputTypes[i] == VariableType.Vector2)
                     {
-                        @params[i] = (Vector2)(Vector3)@params[i];
+                        @params[i] = (Vector2)vector3;
+                    }
+                }
+                else if (@params[i] is Vector4 vector4)
+                {
+                    if (_inputTypes[i] == VariableType.Vector3)
+                    {
+                        @params[i] = (Vector3)vector4;
+                    }
+                    else if (_inputTypes[i] == VariableType.Vector2)
+                    {
+                        @params[i] = (Vector2)vector4;
                     }
                 }
             }

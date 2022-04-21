@@ -5,7 +5,7 @@ namespace CustomConsole
     public class GetVariableSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Word) };
-        public VariableType[] InputTypes => null;
+        public int InputCount => 0;
         public VariableType ReturnType => VariableType.NonVoid;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
@@ -16,6 +16,7 @@ namespace CustomConsole
             return code.Length == 1 &&
                 Syntax.Variables.Exists(v => v.Name == word);
         }
+        public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => true;
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
         {
@@ -27,10 +28,10 @@ namespace CustomConsole
             Variable v = Syntax.Variables.Find(v => v.Name == word && v.Type.Compatable(type));
             if (v != null)
             {
-                return new Executable(this, new KeyWord[] { code[0] }, null, objs =>
+                return new Executable(this, new KeyWord[] { code[0] }, null, _ =>
                 {
                     return v.Getter();
-                });
+                }, null);
             }
 
             return null;
@@ -51,7 +52,7 @@ namespace CustomConsole
             new KeyWord("=", KeyWordType.Special),
             new KeyWord("", KeyWordType.Input, (int)VariableType.NonVoid)
         };
-        public VariableType[] InputTypes { get; } = new VariableType[1] { VariableType.NonVoid };
+        public int InputCount => 1;
         public VariableType ReturnType => VariableType.Void;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
@@ -64,6 +65,19 @@ namespace CustomConsole
 
             return code[1].Word == "=" &&
                 Syntax.Variables.Exists(v => v.Name == word);
+        }
+        public bool PossibleSyntax(ReadOnlySpan<KeyWord> code)
+        {
+            for (int i = 0; i < code.Length; i++)
+            {
+                if (code[i].Type == KeyWordType.Word &&
+                    code.Length > (i + 1) && code[i + 1].Word == "=")
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
@@ -82,14 +96,15 @@ namespace CustomConsole
             }
 
             Executable e = Syntax.FindCorrectSyntax(code[2..], this, v.Type, new KeyWord(), true, out index);
+            index += 2;
 
-            if (e == null || code.Length != (index + 2)) { return null; }
+            if (e == null || code.Length != index) { return null; }
 
             return new Executable(this, new KeyWord[] { code[0] }, new Executable[1] { e }, objs =>
             {
                 v.Setter(objs[0]);
                 return objs[0];
-            });
+            }, new VariableType[] { v.Type });
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
         {

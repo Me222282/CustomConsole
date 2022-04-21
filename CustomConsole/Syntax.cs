@@ -4,7 +4,7 @@ using Zene.Structs;
 
 namespace CustomConsole
 {
-    public class Syntax : ISyntax
+    public sealed class Syntax : ISyntax
     {
         public Syntax(KeyWord[] keywords, VariableType returnType, ExecuteHandle handle)
         {
@@ -94,6 +94,36 @@ namespace CustomConsole
             // Reached end of this syntaxes keywords
             return wordIndex == Keywords.Length;
         }
+        public bool PossibleSyntax(ReadOnlySpan<KeyWord> code)
+        {
+            if (code.Length == 0) { return false; }
+
+            int wordIndex = 0;
+
+            for (int i = 0; i < code.Length; i++)
+            {
+                // Input text - need to find next keyword
+                if (Keywords.Length > wordIndex &&
+                    Keywords[wordIndex].Word == "") { wordIndex++; }
+
+                if (Keywords.Length > wordIndex &&
+                    code[i].Word == Keywords[wordIndex].Word)
+                {
+                    // Next found keyword left no space for input syntax,
+                    // the current keyword match is incorrect
+                    if ((i == 0) && (wordIndex > 0))
+                    {
+                        continue;
+                    }
+
+                    wordIndex++;
+                    continue;
+                }
+            }
+
+            // Reached end of this syntaxes keywords
+            return wordIndex == Keywords.Length;
+        }
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param)
         {
             bool fill = param is bool b && b;
@@ -150,7 +180,7 @@ namespace CustomConsole
                 index++;
             }
 
-            return new Executable(this, Keywords, subExes, Handle);
+            return new Executable(this, Keywords, subExes, Handle, InputTypes);
         }
 
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
@@ -163,25 +193,27 @@ namespace CustomConsole
             return e;
         }
 
+        private static readonly List<ISyntax> _possibleSyntaxes = new List<ISyntax>();
+
         public static List<ISyntax> Syntaxes { get; }
-        public static Executable Decode(ReadOnlySpan<KeyWord> syntax, VariableType returnType = VariableType.Any)
+        private static Executable FindSyntax(ReadOnlySpan<KeyWord> syntax, VariableType returnType = VariableType.Any)
         {
             if (syntax.Length == 0) { return null; }
 
-            for (int i = 0; i < Syntaxes.Count; i++)
+            for (int i = 0; i < _possibleSyntaxes.Count; i++)
             {
                 // Doesn't return correct type
-                if (!returnType.Compatable(Syntaxes[i].ReturnType)) { continue; }
+                if (!returnType.Compatable(_possibleSyntaxes[i].ReturnType)) { continue; }
 
-                bool could = Syntaxes[i].ValidSyntax(syntax);
+                bool could = _possibleSyntaxes[i].ValidSyntax(syntax);
 
                 if (could)
                 {
-                    Executable e = Syntaxes[i].CreateInstance(syntax, returnType);
+                    Executable e = _possibleSyntaxes[i].CreateInstance(syntax, returnType);
 
                     if (e == null) { continue; }
 
-                    if (e.Source != Syntaxes[i])
+                    if (e.Source != _possibleSyntaxes[i])
                     {
                         throw new Exception("Invalid return from syntax");
                     }
@@ -205,6 +237,22 @@ namespace CustomConsole
             throw new ConsoleException("Unknown syntax");
         }
 
+        public static Executable Decode(ReadOnlySpan<KeyWord> syntax, VariableType returnType = VariableType.Any)
+        {
+            _possibleSyntaxes.Clear();
+
+            for (int i = 0; i < Syntaxes.Count; i++)
+            {
+                bool possible = Syntaxes[i].PossibleSyntax(syntax);
+
+                if (!possible) { continue; }
+
+                _possibleSyntaxes.Add(Syntaxes[i]);
+            }
+
+            return FindSyntax(syntax, returnType);
+        }
+
         public static Executable FindCorrectSyntax(ReadOnlySpan<KeyWord> syntax, ISyntax source, VariableType returnType, KeyWord nextWord, bool fill, out int nextIndex)
         {
             nextIndex = 0;
@@ -220,14 +268,14 @@ namespace CustomConsole
                 if (exe != null) { return exe; }
             }
 
-            for (int i = 0; i < Syntaxes.Count; i++)
+            for (int i = 0; i < _possibleSyntaxes.Count; i++)
             {
-                if (!fill && Syntaxes[i].EqualKeyWords(source)) { continue; }
+                if (!fill && _possibleSyntaxes[i].EqualKeyWords(source)) { continue; }
 
                 // Doesn't return correct type
-                if (!returnType.Compatable(Syntaxes[i].ReturnType)) { continue; }
+                if (!returnType.Compatable(_possibleSyntaxes[i].ReturnType)) { continue; }
 
-                Executable e = Syntaxes[i].CorrectSyntax(syntax, returnType, out nextIndex, fill);
+                Executable e = _possibleSyntaxes[i].CorrectSyntax(syntax, returnType, out nextIndex, fill);
 
                 // Not correct syntax
                 if (e == null) { continue; }
@@ -283,11 +331,11 @@ namespace CustomConsole
             ReadOnlySpan<KeyWord> bracketCode = syntax[1..end];
 
             Executable e;
-            try { e = Decode(bracketCode, returnType); }
+            try { e = FindSyntax(bracketCode, returnType); }
             catch (ConsoleException) { return null; }
             return e;
         }
-        private static int FindClosingBracket(ReadOnlySpan<KeyWord> syntax, int openBrackIndex)
+        internal static int FindClosingBracket(ReadOnlySpan<KeyWord> syntax, int openBrackIndex)
         {
             int bracketNumber = syntax[openBrackIndex].Info;
 
@@ -297,7 +345,8 @@ namespace CustomConsole
                 if (syntax[i].Word == ")" && syntax[i].Info == bracketNumber) { return i; }
             }
 
-            return -1;
+            //return -1;
+            return syntax.Length;
         }
 
         public static List<Variable> Variables { get; } = new List<Variable>();
@@ -358,206 +407,229 @@ namespace CustomConsole
                     return new Vector4((double)objs[0], (double)objs[1], (double)objs[2], (double)objs[3]);
                 }),
 
-                //
-                // Interger operators
-                //
-                new Syntax(new KeyWord[]
+                new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.Int),
+                    new KeyWord(VariableType.NonVoid),
                     new KeyWord("|", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
                 {
-                    return (int)objs[0] | (int)objs[1];
+                    VariableType.Int,
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => (int)objs[0] | (int)objs[1],
+                    };
                 }),
-                new Syntax(new KeyWord[]
+                new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.Int),
+                    new KeyWord(VariableType.NonVoid),
                     new KeyWord("&", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
                 {
-                    return (int)objs[0] & (int)objs[1];
+                    VariableType.Int,
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => (int)objs[0] & (int)objs[1],
+                    };
                 }),
-                new Syntax(new KeyWord[]
+                new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord("<<", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
+                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(">", KeyWordType.Special),
+                    new KeyWord(">", KeyWordType.Special),
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
                 {
-                    return (int)objs[0] << (int)objs[1];
+                    VariableType.Int,
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => (int)objs[0] >> (int)objs[1],
+                    };
                 }),
-                new Syntax(new KeyWord[]
+                new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord(">>", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
+                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord("<", KeyWordType.Special),
+                    new KeyWord("<", KeyWordType.Special),
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
                 {
-                    return (int)objs[0] >> (int)objs[1];
+                    VariableType.Int,
+                }, (objs) =>
+                {
+                    return (VariableType)objs[2] switch
+                    {
+                        VariableType.Int => (int)objs[0] << (int)objs[1],
+                    };
                 }),
-                new Syntax(new KeyWord[]
+                new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.Int),
+                    new KeyWord(VariableType.NonVoid),
                     new KeyWord("^", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
                 {
-                    return (int)objs[0] ^ (int)objs[1];
-                }),
-                new Syntax(new KeyWord[]
+                    VariableType.Int,
+                }, (objs) =>
                 {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
-                {
-                    return (int)objs[0] - (int)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord("+", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
-                {
-                    return (int)objs[0] + (int)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord("*", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
-                {
-                    return (int)objs[0] * (int)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord("/", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
-                {
-                    return (int)objs[0] / (int)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Int),
-                    new KeyWord("%", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
-                {
-                    return (int)objs[0] % (int)objs[1];
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => (int)objs[0] ^ (int)objs[1],
+                    };
                 }),
 
-                new Syntax(new KeyWord[]
+
+                new TypedSyntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord("-", KeyWordType.Special),
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
+                {
+                    VariableType.Int,
+                    VariableType.Double,
+                    VariableType.Float,
+                    VariableType.Vector2,
+                    VariableType.Vector3,
+                    VariableType.Vector4
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => (int)objs[0] - (int)objs[1],
+                        VariableType.Double => (double)objs[0] - (double)objs[1],
+                        VariableType.Float => (float)objs[0] - (float)objs[1],
+                        VariableType.Vector2 => (Vector2)objs[0] - (Vector2)objs[1],
+                        VariableType.Vector3 => (Vector3)objs[0] - (Vector3)objs[1],
+                        VariableType.Vector4 => (Vector4)objs[0] - (Vector4)objs[1],
+                    };
+                }),
+                new TypedSyntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord("+", KeyWordType.Special),
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
+                {
+                    VariableType.Int,
+                    VariableType.Double,
+                    VariableType.Float,
+                    VariableType.Vector2,
+                    VariableType.Vector3,
+                    VariableType.Vector4
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => (int)objs[0] + (int)objs[1],
+                        VariableType.Double => (double)objs[0] + (double)objs[1],
+                        VariableType.Float => (float)objs[0] + (float)objs[1],
+                        VariableType.Vector2 => (Vector2)objs[0] + (Vector2)objs[1],
+                        VariableType.Vector3 => (Vector3)objs[0] + (Vector3)objs[1],
+                        VariableType.Vector4 => (Vector4)objs[0] + (Vector4)objs[1],
+                    };
+                }),
+                new TypedSyntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord("*", KeyWordType.Special),
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
+                {
+                    VariableType.Int,
+                    VariableType.Double,
+                    VariableType.Float,
+                    VariableType.Vector2,
+                    VariableType.Vector3,
+                    VariableType.Vector4
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => (int)objs[0] * (int)objs[1],
+                        VariableType.Double => (double)objs[0] * (double)objs[1],
+                        VariableType.Float => (float)objs[0] * (float)objs[1],
+                        VariableType.Vector2 => (Vector2)objs[0] * (Vector2)objs[1],
+                        VariableType.Vector3 => (Vector3)objs[0] * (Vector3)objs[1],
+                        VariableType.Vector4 => (Vector4)objs[0] * (Vector4)objs[1],
+                    };
+                }),
+                new TypedSyntax(new KeyWord[]
+                {
+                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord("/", KeyWordType.Special),
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
+                {
+                    VariableType.Int,
+                    VariableType.Double,
+                    VariableType.Float,
+                    VariableType.Vector2,
+                    VariableType.Vector3,
+                    VariableType.Vector4
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => (int)objs[0] / (int)objs[1],
+                        VariableType.Double => (double)objs[0] / (double)objs[1],
+                        VariableType.Float => (float)objs[0] / (float)objs[1],
+                        VariableType.Vector2 => (Vector2)objs[0] / (Vector2)objs[1],
+                        VariableType.Vector3 => (Vector3)objs[0] / (Vector3)objs[1],
+                        VariableType.Vector4 => (Vector4)objs[0] / (Vector4)objs[1],
+                    };
+                }),
+
+                new TypedSyntax(new KeyWord[]
                 {
                     new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VariableType.Int)
-                }, VariableType.Int, (objs) =>
+                    new KeyWord(VariableType.NonVoid)
+                }, new VariableType[]
                 {
-                    return -(int)objs[0];
+                    VariableType.Int,
+                    VariableType.Double,
+                    VariableType.Float,
+                    VariableType.Vector2,
+                    VariableType.Vector3,
+                    VariableType.Vector4
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => -(int)objs[0],
+                        VariableType.Double => -(double)objs[0],
+                        VariableType.Float => -(float)objs[0],
+                        VariableType.Vector2 => -(Vector2)objs[0],
+                        VariableType.Vector3 => -(Vector3)objs[0],
+                        VariableType.Vector4 => -(Vector4)objs[0],
+                    };
                 }),
-                new Syntax(new KeyWord[]
+                new TypedSyntax(new KeyWord[]
                 {
                     new KeyWord("|", KeyWordType.Special),
-                    new KeyWord(VariableType.Int),
+                    new KeyWord(VariableType.NonVoid),
                     new KeyWord("|", KeyWordType.Special)
-                }, VariableType.Int, (objs) =>
+                }, new VariableType[]
                 {
-                    return Math.Abs((int)objs[0]);
+                    VariableType.Int,
+                    VariableType.Double,
+                    VariableType.Float
+                }, (objs) =>
+                {
+                    return (VariableType)objs[^1] switch
+                    {
+                        VariableType.Int => Math.Abs((int)objs[0]),
+                        VariableType.Double => Math.Abs((double)objs[0]),
+                        VariableType.Float => Math.Abs((float)objs[0])
+                    };
                 }),
-
-                //
-                // Double operators
-                //
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] - (double)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("+", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] + (double)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("*", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] * (double)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("/", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] / (double)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Double),
-                    new KeyWord("%", KeyWordType.Special),
-                    new KeyWord(VariableType.Double)
-                }, VariableType.Double, (objs) =>
-                {
-                    return (double)objs[0] % (double)objs[1];
-                }),
-
-                //
-                // Vector2 operators
-                //
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Vector2),
-                    new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VariableType.Vector2)
-                }, VariableType.Vector2, (objs) =>
-                {
-                    return (Vector2)objs[0] - (Vector2)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Vector2),
-                    new KeyWord("+", KeyWordType.Special),
-                    new KeyWord(VariableType.Vector2)
-                }, VariableType.Vector2, (objs) =>
-                {
-                    return (Vector2)objs[0] + (Vector2)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Vector2),
-                    new KeyWord("*", KeyWordType.Special),
-                    new KeyWord(VariableType.Vector2)
-                }, VariableType.Vector2, (objs) =>
-                {
-                    return (Vector2)objs[0] * (Vector2)objs[1];
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord(VariableType.Vector2),
-                    new KeyWord("/", KeyWordType.Special),
-                    new KeyWord(VariableType.Vector2)
-                }, VariableType.Vector2, (objs) =>
-                {
-                    return (Vector2)objs[0] / (Vector2)objs[1];
-                })
             };
         }
     }

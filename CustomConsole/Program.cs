@@ -4,6 +4,7 @@ using Zene.Windowing.Base;
 using Zene.Graphics;
 using Zene.Structs;
 using System.Text;
+using System.Diagnostics;
 
 namespace CustomConsole
 {
@@ -28,19 +29,15 @@ namespace CustomConsole
                 bean = (int)objs;
             }));
 
-            Syntax.Syntaxes.Add(new Syntax(
-            new KeyWord[]
-            {
-                new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word),
-            }, VariableType.Void, objs =>
-            {
-                throw new Exception();
-            }));
+            Stopwatch s = new Stopwatch();
+            s.Start();
+
+            KeyWord[] kws = "|3 - 5|".FindKeyWords();
 
             Executable e;
             try
             {
-                e = Syntax.Decode("{4, 3} - {3,2}".FindKeyWords());
+                e = Syntax.Decode(kws);
             }
             catch (ConsoleException ex)
             {
@@ -48,8 +45,19 @@ namespace CustomConsole
                 Console.ReadLine();
                 return;
             }
-
-            Console.WriteLine(e.Execute());
+            s.Stop();
+            //Console.WriteLine(s.ElapsedMilliseconds);
+            
+            try
+            {
+                Console.WriteLine(e.Execute());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.GetType().Name} was thrown with message \"{ex.Message}\"");
+                Console.ReadLine();
+                return;
+            }
             Console.ReadLine();
         }
         

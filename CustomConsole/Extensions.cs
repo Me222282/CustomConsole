@@ -278,7 +278,11 @@ namespace CustomConsole
                     b == VariableType.Int,
 
                 VariableType.Vector2 => b == VariableType.Vector2 ||
-                    b == VariableType.Vector3,
+                    b == VariableType.Vector3 ||
+                    b == VariableType.Vector4,
+
+                VariableType.Vector3 => b == VariableType.Vector3 ||
+                    b == VariableType.Vector4,
 
                 _ => a == b,
             } ||
