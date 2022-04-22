@@ -9,4 +9,5 @@ memory.Free(i);
 memory.Free(number);
 
 Console.ReadLine();
-Console.WriteLine(i);
+
+HALT_AND_CATCH_FIRE;
