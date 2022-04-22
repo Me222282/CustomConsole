@@ -86,6 +86,7 @@ namespace CustomConsole
 
             for (int i = 0; i < _possibleSyntaxes.Count; i++)
             {
+                // Removes some possibility of stackoverflow
                 if (!fill && _possibleSyntaxes[i].EqualKeyWords(source)) { continue; }
 
                 // Null is Void
