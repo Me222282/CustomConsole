@@ -50,6 +50,12 @@ namespace CustomConsole
 
             SyntaxPasser.Variables.Add(new Variable("null", VarType.NonVoid, () => null, _ => throw new Exception("Cannot set null")));
 
+            //SyntaxPasser.Syntaxes.Insert(0, new CommandSyntax());
+            CommandSyntax.Commands.Add(new Command("test", new char[] { 'c', 't' }, objs =>
+            {
+                Console.WriteLine($"It works with {objs[0]} and {objs[1]}");
+            }));
+
             ExecuteFile("resources/zene.txt");
             Console.ReadLine();
             return;
@@ -57,8 +63,7 @@ namespace CustomConsole
             Stopwatch s = new Stopwatch();
             s.Start();
 
-            //KeyWord[] kws = "Maths.Round(5.3f) + 5.2d + bean".FindKeyWords();
-            KeyWord[] kws = "|-2| | 4".FindKeyWords();
+            KeyWord[] kws = "Maths.Round(5.3f) + 5.2d + bean".FindKeyWords();
 
             Executable e;
             try

@@ -5,7 +5,6 @@ namespace CustomConsole
     public class CharSyntax : ISyntax
     {
         private static readonly string[] _preChars = new string[] { "\'" };
-        private static readonly string[] _postChars = new string[] { "\'" };
 
         public KeyWord[] Keywords { get; } = new KeyWord[3]
         {
@@ -15,7 +14,7 @@ namespace CustomConsole
         };
         public int InputCount => 0;
         public IVarType ReturnType => VarType.Char;
-        public ICodeFormat DisplayFormat { get; } = new CodeFormat(_preChars, _postChars);
+        public ICodeFormat DisplayFormat { get; } = new CodeFormat(_preChars);
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {
