@@ -71,7 +71,7 @@ namespace CustomConsole
         {
             new KeyWord(null, KeyWordType.Word),
             new KeyWord("=", KeyWordType.Special),
-            new KeyWord("", KeyWordType.Input, (int)VariableType.NonVoid)
+            new KeyWord(VarType.NonVoid)
         };
         public int InputCount => 1;
         public IVarType ReturnType => VarType.Void;
@@ -143,6 +143,8 @@ namespace CustomConsole
                     throw new Exception($"Variable {v.Name}'s type is not compatible with assignment type");
                 }
 
+                Extensions.PassToType(ref objs[0], v.Type);
+
                 v.Setter(objs[0]);
                 return objs[0];
             }, VarType.Void);
@@ -160,7 +162,7 @@ namespace CustomConsole
             new KeyWord(VarType.Type),
             new KeyWord(null, KeyWordType.Word),
             new KeyWord("=", KeyWordType.Special),
-            new KeyWord("", KeyWordType.Input, (int)VariableType.NonVoid)
+            new KeyWord(VarType.NonVoid)
         };
         public int InputCount => 1;
         public IVarType ReturnType => VarType.Void;

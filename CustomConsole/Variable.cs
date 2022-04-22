@@ -5,15 +5,6 @@
 
     public class Variable
     {
-        public Variable(string name, StringConverter paramConverter, VariableGetter get, VariableSetter set)
-        {
-            Name = name;
-
-            ParamConverter = paramConverter;
-
-            Getter = get;
-            Setter = set;
-        }
         public Variable(string name, IVarType type, VariableGetter get, VariableSetter set)
         {
             Name = name;
@@ -32,7 +23,6 @@
 
         public string Name { get; }
 
-        public StringConverter ParamConverter { get; }
         public IVarType Type { get; }
 
         private object _value;

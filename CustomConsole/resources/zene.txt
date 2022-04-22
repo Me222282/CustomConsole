@@ -1,6 +1,6 @@
-﻿int number = |-5|;
+﻿double number = 11;
 
-number.Type i = 5 + 5;
+number.Type i = 11;
 
 Console.WriteLine(i);
 Console.WriteLine(int);

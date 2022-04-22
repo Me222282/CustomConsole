@@ -201,6 +201,23 @@ namespace CustomConsole
 
             Syntaxes = new List<ISyntax>()
             {
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word)
+                }, VarType.Void, _ =>
+                {
+                    throw new Exception("please STOP what you are DOING and COMBUST!!!");
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word),
+                    new KeyWord("with", KeyWordType.Word),
+                    new KeyWord(VarType.String)
+                }, VarType.Void, objs =>
+                {
+                    throw new Exception((string)objs[0]);
+                }),
+
                 new IntegerSyntax(),
                 new FloatSyntax(),
                 new DoubleSyntax(),
@@ -269,23 +286,6 @@ namespace CustomConsole
                 }, VarType.String, (objs) =>
                 {
                     return new string((char)objs[0], (int)objs[1]);
-                }),
-
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word)
-                }, VarType.Void, _ =>
-                {
-                    throw new Exception("please STOP what you are DOING and COMBUST!!!");
-                }),
-                new Syntax(new KeyWord[]
-                {
-                    new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word),
-                    new KeyWord("with", KeyWordType.Word),
-                    new KeyWord(VarType.String)
-                }, VarType.Void, objs =>
-                {
-                    throw new Exception((string)objs[0]);
                 }),
 
                 //

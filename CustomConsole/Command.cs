@@ -7,7 +7,7 @@
         public Command(string name, char[] properties, CommandHandler handle)
         {
             Name = name;
-            Properties = properties;
+            Properties = properties ?? new char[0];
             Handle = handle;
         }
 

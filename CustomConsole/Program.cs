@@ -4,7 +4,6 @@ using Zene.Windowing.Base;
 using Zene.Graphics;
 using Zene.Structs;
 using System.Text;
-using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
 
@@ -14,14 +13,14 @@ namespace CustomConsole
     {
         static void Main()
         {
-            /*Core.Init();
+            Core.Init();
             
             Program window = new Program(800, 500, Terminal.Directory);
 
             window.Run();
             
-            Core.Terminate();*/
-
+            Core.Terminate();
+            return;
             SyntaxPasser.Variables.Add(new Variable("bean", VarType.Int, 5));
             SyntaxPasser.Functions.Add(new Function(new string[] { "Maths", "Round" }, new IVarType[] { VarType.Double }, VarType.Double, objs =>
             {
@@ -60,9 +59,6 @@ namespace CustomConsole
             Console.ReadLine();
             return;
 
-            Stopwatch s = new Stopwatch();
-            s.Start();
-
             KeyWord[] kws = "Maths.Round(5.3f) + 5.2d + bean".FindKeyWords();
 
             Executable e;
@@ -76,10 +72,6 @@ namespace CustomConsole
                 Console.ReadLine();
                 return;
             }
-            s.Stop();
-            //Console.WriteLine(s.ElapsedMilliseconds);
-
-            //Console.WriteLine(e.Execute());
 
             try
             {
@@ -206,34 +198,19 @@ namespace CustomConsole
             // Update draw when output to console
             Terminal.OnLog += (_, _) => _update = true;
 
-            Terminal.AddFunction("Copy", new VariableType[] { VariableType.String, VariableType.Int }, (objs, info) =>
+            Terminal.AddFunction("Copy", new IVarType[] { VarType.String, VarType.Int }, VarType.String, objs =>
             {
-                bool displayCount = false;
-
-                if (info == "-i")
-                {
-                    displayCount = true;
-                }
-                else if (info != null && info.Length != 0)
-                {
-                    throw new ConsoleException("Invalid extra info");
-                }
-
                 string text = (string)objs[0];
                 int count = (int)objs[1];
 
                 for (int i = 0; i < count; i++)
                 {
-                    if (displayCount)
-                    {
-                        Terminal.Log($"{text} - {i}");
-                        continue;
-                    }
-
                     Terminal.Log(text);
                 }
+
+                return null;
             });
-            Terminal.AddVariable("margin", VariableType.Double, () =>
+            Terminal.AddVariable("margin", VarType.Double, () =>
             {
                 return _margin;
             }, obj =>
@@ -242,7 +219,7 @@ namespace CustomConsole
             });
 
             Vector3 v = Vector3.One;
-            Terminal.AddVariable("v", VariableType.Vector3, () =>
+            Terminal.AddVariable("v", VarType.Vector3, () =>
             {
                 return v;
             }, obj =>
