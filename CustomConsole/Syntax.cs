@@ -6,32 +6,26 @@ namespace CustomConsole
 {
     public sealed class Syntax : ISyntax
     {
-        public Syntax(KeyWord[] keywords, VariableType returnType, ExecuteHandle handle)
+        public Syntax(KeyWord[] keywords, IVarType returnType, ExecuteHandle handle)
         {
             Keywords = keywords;
             ReturnType = returnType;
             Handle = handle;
 
-            int inputIndex = 0;
-            List<VariableType> inputs = new List<VariableType>();
-
+            InputCount = 0;
             for (int i = 0; i < keywords.Length; i++)
             {
                 if (keywords[i] == KeyWord.UnknownInput)
                 {
-                    inputs.Add(keywords[i].InputType);
-                    inputIndex++;
+                    InputCount++;
                 }
             }
-
-            InputTypes = inputs.ToArray();
         }
 
         public KeyWord[] Keywords { get; }
-        public VariableType[] InputTypes { get; }
         public ExecuteHandle Handle { get; }
-        public VariableType ReturnType { get; }
-        public int InputCount => InputTypes.Length;
+        public IVarType ReturnType { get; }
+        public int InputCount { get; }
 
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
@@ -124,7 +118,7 @@ namespace CustomConsole
             // Reached end of this syntaxes keywords
             return wordIndex == Keywords.Length;
         }
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param)
         {
             bool fill = param is bool b && b;
 
@@ -180,10 +174,10 @@ namespace CustomConsole
                 index++;
             }
 
-            return new Executable(this, Keywords, subExes, Handle, InputTypes);
+            return new Executable(this, Keywords, subExes, Handle, ReturnType);
         }
 
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
         {
             Executable e = CorrectSyntax(code, type, out int i, true);
 
@@ -196,14 +190,17 @@ namespace CustomConsole
         private static readonly List<ISyntax> _possibleSyntaxes = new List<ISyntax>();
 
         public static List<ISyntax> Syntaxes { get; }
-        private static Executable FindSyntax(ReadOnlySpan<KeyWord> syntax, VariableType returnType = VariableType.Any)
+        private static Executable FindSyntax(ReadOnlySpan<KeyWord> syntax, IVarType returnType)
         {
             if (syntax.Length == 0) { return null; }
 
             for (int i = 0; i < _possibleSyntaxes.Count; i++)
             {
+                // Null is Void
+                if (_possibleSyntaxes[i].ReturnType == null &&
+                    (returnType != null || returnType != VarType.Any)) { continue; }
                 // Doesn't return correct type
-                if (!returnType.Compatable(_possibleSyntaxes[i].ReturnType)) { continue; }
+                if (!_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
 
                 bool could = _possibleSyntaxes[i].ValidSyntax(syntax);
 
@@ -237,7 +234,7 @@ namespace CustomConsole
             throw new ConsoleException("Unknown syntax");
         }
 
-        public static Executable Decode(ReadOnlySpan<KeyWord> syntax, VariableType returnType = VariableType.Any)
+        public static Executable Decode(ReadOnlySpan<KeyWord> syntax, IVarType returnType)
         {
             _possibleSyntaxes.Clear();
 
@@ -253,7 +250,7 @@ namespace CustomConsole
             return FindSyntax(syntax, returnType);
         }
 
-        public static Executable FindCorrectSyntax(ReadOnlySpan<KeyWord> syntax, ISyntax source, VariableType returnType, KeyWord nextWord, bool fill, out int nextIndex)
+        public static Executable FindCorrectSyntax(ReadOnlySpan<KeyWord> syntax, ISyntax source, IVarType returnType, KeyWord nextWord, bool fill, out int nextIndex)
         {
             nextIndex = 0;
 
@@ -272,8 +269,11 @@ namespace CustomConsole
             {
                 if (!fill && _possibleSyntaxes[i].EqualKeyWords(source)) { continue; }
 
+                // Null is Void
+                if (_possibleSyntaxes[i].ReturnType == null &&
+                    (returnType != null || returnType != VarType.Any)) { continue; }
                 // Doesn't return correct type
-                if (!returnType.Compatable(_possibleSyntaxes[i].ReturnType)) { continue; }
+                if (!_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
 
                 Executable e = _possibleSyntaxes[i].CorrectSyntax(syntax, returnType, out nextIndex, fill);
 
@@ -299,7 +299,7 @@ namespace CustomConsole
 
             return null;
         }
-        private static Executable ManageBrackets(ReadOnlySpan<KeyWord> syntax, VariableType returnType, KeyWord nextWord, bool fill, out int nextIndex)
+        private static Executable ManageBrackets(ReadOnlySpan<KeyWord> syntax, IVarType returnType, KeyWord nextWord, bool fill, out int nextIndex)
         {
             int end = FindClosingBracket(syntax, 0);
 
@@ -370,11 +370,11 @@ namespace CustomConsole
                 new Syntax(new KeyWord[]
                 {
                     new KeyWord("{", KeyWordType.BracketOpen),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord("}", KeyWordType.BracketClosed)
-                }, VariableType.Vector2, (objs) =>
+                }, VarType.Vector2, (objs) =>
                 {
                     return new Vector2((double)objs[0], (double)objs[1]);
                 }),
@@ -382,13 +382,13 @@ namespace CustomConsole
                 new Syntax(new KeyWord[]
                 {
                     new KeyWord("{", KeyWordType.BracketOpen),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord("}", KeyWordType.BracketClosed)
-                }, VariableType.Vector3, (objs) =>
+                }, VarType.Vector3, (objs) =>
                 {
                     return new Vector3((double)objs[0], (double)objs[1], (double)objs[2]);
                 }),
@@ -396,15 +396,15 @@ namespace CustomConsole
                 new Syntax(new KeyWord[]
                 {
                     new KeyWord("{", KeyWordType.BracketOpen),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Double),
+                    new KeyWord(VarType.Double),
                     new KeyWord("}", KeyWordType.BracketClosed)
-                }, VariableType.Vector4, (objs) =>
+                }, VarType.Vector4, (objs) =>
                 {
                     return new Vector4((double)objs[0], (double)objs[1], (double)objs[2], (double)objs[3]);
                 }),
@@ -415,11 +415,11 @@ namespace CustomConsole
                     new KeyWord("new", KeyWordType.BracketOpen),
                     new KeyWord("string", KeyWordType.BracketOpen),
                     new KeyWord("(", KeyWordType.BracketOpen),
-                    new KeyWord(VariableType.Char),
+                    new KeyWord(VarType.Char),
                     new KeyWord(",", KeyWordType.Special),
-                    new KeyWord(VariableType.Int),
+                    new KeyWord(VarType.Int),
                     new KeyWord(")", KeyWordType.BracketClosed)
-                }, VariableType.String, (objs) =>
+                }, VarType.String, (objs) =>
                 {
                     return new string((char)objs[0], (int)objs[1]);
                 }),
@@ -429,13 +429,13 @@ namespace CustomConsole
                 //
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("|", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                }, (objs) =>
+                    VarType.Int,
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -445,13 +445,13 @@ namespace CustomConsole
                 }),
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("&", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                }, (objs) =>
+                    VarType.Int,
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -461,14 +461,14 @@ namespace CustomConsole
                 }),
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord(">", KeyWordType.Special),
                     new KeyWord(">", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                }, (objs) =>
+                    VarType.Int,
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -478,14 +478,14 @@ namespace CustomConsole
                 }),
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("<", KeyWordType.Special),
                     new KeyWord("<", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                }, (objs) =>
+                    VarType.Int,
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -495,13 +495,13 @@ namespace CustomConsole
                 }),
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("^", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                }, (objs) =>
+                    VarType.Int,
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -515,18 +515,18 @@ namespace CustomConsole
                 //
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                    VariableType.Double,
-                    VariableType.Float,
-                    VariableType.Vector2,
-                    VariableType.Vector3,
-                    VariableType.Vector4
-                }, (objs) =>
+                    VarType.Int,
+                    VarType.Double,
+                    VarType.Float,
+                    VarType.Vector2,
+                    VarType.Vector3,
+                    VarType.Vector4
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -541,20 +541,20 @@ namespace CustomConsole
                 }),
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("+", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                    VariableType.Double,
-                    VariableType.Float,
-                    VariableType.String,
-                    VariableType.Char,
-                    VariableType.Vector2,
-                    VariableType.Vector3,
-                    VariableType.Vector4
-                }, (objs) =>
+                    VarType.Int,
+                    VarType.Double,
+                    VarType.Float,
+                    VarType.String,
+                    VarType.Char,
+                    VarType.Vector2,
+                    VarType.Vector3,
+                    VarType.Vector4
+                }, VarType.NonVoid, (objs) =>
                 {
                     /*
                     return (VariableType)objs[^1] switch
@@ -582,18 +582,18 @@ namespace CustomConsole
                 }),
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("*", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                    VariableType.Double,
-                    VariableType.Float,
-                    VariableType.Vector2,
-                    VariableType.Vector3,
-                    VariableType.Vector4
-                }, (objs) =>
+                    VarType.Int,
+                    VarType.Double,
+                    VarType.Float,
+                    VarType.Vector2,
+                    VarType.Vector3,
+                    VarType.Vector4
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -608,18 +608,18 @@ namespace CustomConsole
                 }),
                 new TypedSyntax(new KeyWord[]
                 {
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("/", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                    VariableType.Double,
-                    VariableType.Float,
-                    VariableType.Vector2,
-                    VariableType.Vector3,
-                    VariableType.Vector4
-                }, (objs) =>
+                    VarType.Int,
+                    VarType.Double,
+                    VarType.Float,
+                    VarType.Vector2,
+                    VarType.Vector3,
+                    VarType.Vector4
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -639,16 +639,16 @@ namespace CustomConsole
                 new TypedSyntax(new KeyWord[]
                 {
                     new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid)
-                }, new VariableType[]
+                    new KeyWord(VarType.NonVoid)
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                    VariableType.Double,
-                    VariableType.Float,
-                    VariableType.Vector2,
-                    VariableType.Vector3,
-                    VariableType.Vector4
-                }, (objs) =>
+                    VarType.Int,
+                    VarType.Double,
+                    VarType.Float,
+                    VarType.Vector2,
+                    VarType.Vector3,
+                    VarType.Vector4
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -664,14 +664,14 @@ namespace CustomConsole
                 new TypedSyntax(new KeyWord[]
                 {
                     new KeyWord("|", KeyWordType.Special),
-                    new KeyWord(VariableType.NonVoid),
+                    new KeyWord(VarType.NonVoid),
                     new KeyWord("|", KeyWordType.Special)
-                }, new VariableType[]
+                }, new IVarType[]
                 {
-                    VariableType.Int,
-                    VariableType.Double,
-                    VariableType.Float
-                }, (objs) =>
+                    VarType.Int,
+                    VarType.Double,
+                    VarType.Float
+                }, VarType.NonVoid, (objs) =>
                 {
                     return objs[0] switch
                     {

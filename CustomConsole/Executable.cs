@@ -8,7 +8,7 @@ namespace CustomConsole
 
     public class Executable
     {
-        public Executable(ISyntax src, KeyWord[] syntax, Executable[] subExecutables, ExecuteHandle handle, VariableType[] inputTypes)
+        public Executable(ISyntax src, KeyWord[] syntax, Executable[] subExecutables, ExecuteHandle handle, IVarType returnType)
         {
             Source = src ?? throw new Exception($"{nameof(src)} cannot be null.");
 
@@ -32,20 +32,17 @@ namespace CustomConsole
 
             Function = handle ?? throw new Exception($"{nameof(handle)} cannot be null.");
 
-            if ((inputTypes == null && Source.InputCount != 0) ||
-                (inputTypes != null && Source.InputCount != inputTypes.Length))
-            {
-                throw new Exception("Invalid input types - not correct length");
-            }
-
-            _inputTypes = inputTypes;
+            _inputTypes = GetInputTypes(syntax);
+            ReturnType = returnType;
         }
 
         public ISyntax Source { get; }
         public KeyWord[] Syntax { get; }
         public Executable[] SubExecutables { get; }
+        
+        public IVarType ReturnType { get; }
 
-        private readonly VariableType[] _inputTypes;
+        private readonly IVarType[] _inputTypes;
 
         public KeyWord[] CompleteSyntax
         {
@@ -87,36 +84,36 @@ namespace CustomConsole
 
                 if (@params[i] is int @int)
                 {
-                    if (_inputTypes[i] == VariableType.Float)
+                    if (_inputTypes[i] == VarType.Float)
                     {
                         @params[i] = (float)@int;
                     }
-                    else if (_inputTypes[i] == VariableType.Double)
+                    else if (_inputTypes[i] == VarType.Double)
                     {
                         @params[i] = (double)@int;
                     }
                 }
                 if (@params[i] is float @float)
                 {
-                    if (_inputTypes[i] == VariableType.Double)
+                    if (_inputTypes[i] == VarType.Double)
                     {
                         @params[i] = (double)@float;
                     }
                 }
                 else if (@params[i] is Vector3 vector3)
                 {
-                    if (_inputTypes[i] == VariableType.Vector2)
+                    if (_inputTypes[i] == VarType.Vector2)
                     {
                         @params[i] = (Vector2)vector3;
                     }
                 }
                 else if (@params[i] is Vector4 vector4)
                 {
-                    if (_inputTypes[i] == VariableType.Vector3)
+                    if (_inputTypes[i] == VarType.Vector3)
                     {
                         @params[i] = (Vector3)vector4;
                     }
-                    else if (_inputTypes[i] == VariableType.Vector2)
+                    else if (_inputTypes[i] == VarType.Vector2)
                     {
                         @params[i] = (Vector2)vector4;
                     }
@@ -124,6 +121,20 @@ namespace CustomConsole
             }
 
             return Function(@params);
+        }
+
+        private static IVarType[] GetInputTypes(KeyWord[] syntax)
+        {
+            List<IVarType> types = new List<IVarType>();
+            for (int i = 0; i < syntax.Length; i++)
+            {
+                if (syntax[i].Type == KeyWordType.Input)
+                {
+                    types.Add(syntax[i].InputType);
+                }
+            }
+
+            return types.ToArray();
         }
     }
 }

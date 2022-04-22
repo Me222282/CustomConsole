@@ -263,91 +263,20 @@ namespace CustomConsole
         public static string CreateCode(this Executable executable)
             => CreateCode(executable.CompleteSyntax, executable.Source.DisplayFormat);
 
-        public static VariableType? GetHigherType(this VariableType a, VariableType b)
+        public static IVarType GetHigherType(this IVarType a, IVarType b)
         {
-            VariableType? vart = RightOverLeft(a, b);
-            /*
-            if (vart == null) { return RightOverLeft(b, a); }
-            else { return vart; }*/
+            if (a.Equals(b)) { return a; }
 
-            // a to b is null
-            return vart ??
-                // b to a is null
-                RightOverLeft(b, a) ??
-                // a and b arn't compatable
-                (a != b ? null : a);
-        }
-        private static VariableType? RightOverLeft(VariableType a, VariableType b)
-        {
-            if (a == VariableType.NonVoid || a == VariableType.Any) { return b; }
-            if (b == VariableType.NonVoid || b == VariableType.Any) { return a; }
+            if (a == VarType.Any) { return b; }
+            if (b == VarType.Any) { return a; }
 
-            switch (a)
-            {
-                case VariableType.Int:
-                    if (b == VariableType.Int || b == VariableType.Float || b == VariableType.Double)
-                    {
-                        return b;
-                    }
-                    return null;
+            if (a == VarType.NonVoid && b != VarType.Void) { return b; }
+            if (b == VarType.NonVoid && a != VarType.Void) { return a; }
 
-                case VariableType.Float:
-                    if (b == VariableType.Float || b == VariableType.Double)
-                    {
-                        return b;
-                    }
-                    return null;
+            if (a.ImplicitTo != null && a.ImplicitTo.Contains(b)) { return b; }
+            if (b.ImplicitTo != null && b.ImplicitTo.Contains(a)) { return a; }
 
-                case VariableType.Vector2:
-                    if (b == VariableType.Vector2 || b == VariableType.Vector3 || b == VariableType.Vector4)
-                    {
-                        return b;
-                    }
-                    return null;
-
-                case VariableType.Vector3:
-                    if (b == VariableType.Vector3 || b == VariableType.Vector4)
-                    {
-                        return b;
-                    }
-                    return null;
-            }
-
-            return null;
-        }
-
-        public static bool Compatable(this VariableType a, VariableType b)
-        {
-            /*
-            return a switch
-            {
-                VariableType.Any => true,
-                VariableType.NonVoid => b != VariableType.Void,
-
-                VariableType.Double => b == VariableType.Double ||
-                    b == VariableType.Float ||
-                    b == VariableType.Int,
-
-                VariableType.Float => b == VariableType.Float ||
-                    b == VariableType.Int,
-
-                VariableType.Vector2 => b == VariableType.Vector2 ||
-                    b == VariableType.Vector3 ||
-                    b == VariableType.Vector4,
-
-                VariableType.Vector3 => b == VariableType.Vector3 ||
-                    b == VariableType.Vector4,
-
-                _ => a == b,
-            } ||
-            b switch
-            {
-                VariableType.Any => true,
-                VariableType.NonVoid => a != VariableType.Void,
-                _ => false,
-            };*/
-
-            return a.GetHigherType(b) != null;
+            throw new ConsoleException("Invalid comparison");
         }
 
         public static bool Contains<T>(this ReadOnlySpan<T> source, T value)

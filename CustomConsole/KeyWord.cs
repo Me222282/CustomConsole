@@ -17,31 +17,24 @@ namespace CustomConsole
 
     public struct KeyWord
     {
-        public const int Double = (int)VariableType.Double;
-        public const int Int = (int)VariableType.Int;
-        public const int Float = (int)VariableType.Float;
-        public const int String = (int)VariableType.String;
-        public const int Char = (int)VariableType.Char;
-        public const int Bool = (int)VariableType.Bool;
-        public const int Vector2 = (int)VariableType.Vector2;
-        public const int Vecotr3 = (int)VariableType.Vector3;
-
         public KeyWord(string key, KeyWordType type, int info = 0)
         {
             Word = key;
             Type = type;
             Info = info;
+            InputType = null;
         }
-        public KeyWord(VariableType expectedType)
+        public KeyWord(IVarType expectedType)
         {
             Word = "";
             Type = KeyWordType.Input;
-            Info = (int)expectedType;
+            Info = 0;
+            InputType = expectedType;
         }
 
         public string Word { get; }
         public int Info { get; }
-        public VariableType InputType => (VariableType)Info;
+        public IVarType InputType { get; }
 
         public KeyWordType Type { get; }
 

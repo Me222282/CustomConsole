@@ -21,7 +21,7 @@ namespace CustomConsole
             Core.Terminate();*/
 
             int bean = 5;
-            Syntax.Variables.Add(new Variable("bean", VariableType.Int, () =>
+            Syntax.Variables.Add(new Variable("bean", VarType.Int, () =>
             {
                 return bean;
             }, objs =>
@@ -37,7 +37,7 @@ namespace CustomConsole
             Executable e;
             try
             {
-                e = Syntax.Decode(kws);
+                e = Syntax.Decode(kws, VarType.Any);
             }
             catch (ConsoleException ex)
             {

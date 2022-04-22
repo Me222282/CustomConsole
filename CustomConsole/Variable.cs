@@ -14,14 +14,14 @@
             Getter = get;
             Setter = set;
         }
-        public Variable(string name, VariableType type, VariableGetter get, VariableSetter set)
+        public Variable(string name, IVarType type, VariableGetter get, VariableSetter set)
         {
             Name = name;
             Type = type;
             Getter = get;
             Setter = set;
         }
-        public Variable(string name, VariableType type, object value)
+        public Variable(string name, IVarType type, object value)
         {
             Name = name;
             Type = type;
@@ -33,7 +33,7 @@
         public string Name { get; }
 
         public StringConverter ParamConverter { get; }
-        public VariableType Type { get; }
+        public IVarType Type { get; }
 
         private object _value;
 

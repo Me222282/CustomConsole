@@ -6,7 +6,7 @@ namespace CustomConsole
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Word) };
         public int InputCount => 0;
-        public VariableType ReturnType => VariableType.NonVoid;
+        public IVarType ReturnType => VarType.NonVoid;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
@@ -18,25 +18,25 @@ namespace CustomConsole
         }
         public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => true;
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param = null)
         {
             index = 1;
 
             if (code.Length == 0) { return null; }
 
             string word = code[0].Word;
-            Variable v = Syntax.Variables.Find(v => v.Name == word && v.Type.Compatable(type));
+            Variable v = Syntax.Variables.Find(v => v.Name == word && type.Compatible(v.Type));
             if (v != null)
             {
                 return new Executable(this, new KeyWord[] { code[0] }, null, _ =>
                 {
                     return v.Getter();
-                }, null);
+                }, v.Type);
             }
 
             return null;
         }
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
         {
             if (code.Length != 1) { return null; }
 
@@ -53,7 +53,7 @@ namespace CustomConsole
             new KeyWord("", KeyWordType.Input, (int)VariableType.NonVoid)
         };
         public int InputCount => 1;
-        public VariableType ReturnType => VariableType.Void;
+        public IVarType ReturnType => VarType.Void;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
@@ -80,7 +80,7 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param = null)
         {
             index = -1;
 
@@ -90,7 +90,7 @@ namespace CustomConsole
             }
 
             string word = code[0].Word;
-            Variable v = Syntax.Variables.Find(v => v.Name == word && v.Type.Compatable(type));
+            Variable v = Syntax.Variables.Find(v => v.Name == word && type.Compatible(v.Type));
             if (v == null) { return null; }
 
             Executable e = Syntax.FindCorrectSyntax(code[2..], this, v.Type, new KeyWord(), true, out index);
@@ -102,9 +102,9 @@ namespace CustomConsole
             {
                 v.Setter(objs[0]);
                 return objs[0];
-            }, new VariableType[] { v.Type });
+            }, VarType.Void);
         }
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
         {
             return CorrectSyntax(code, type, out _);
         }
@@ -120,7 +120,7 @@ namespace CustomConsole
             new KeyWord("", KeyWordType.Input, (int)VariableType.NonVoid)
         };
         public int InputCount => 1;
-        public VariableType ReturnType => VariableType.Void;
+        public IVarType ReturnType => VarType.Void;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
@@ -148,7 +148,7 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param = null)
         {
             index = -1;
 
@@ -157,47 +157,52 @@ namespace CustomConsole
 
             string name = code[1].Word;
 
-            VariableType? vart = GetType(code[0].Word);
+            VarType vart;
+            try
+            {
+                vart = GetType(code[0].Word);
+            }
+            catch (ConsoleException) { return null; }
 
             // some reasons why a variable cannot be made
             if (vart == null) { return null; }
 
-            Executable e = Syntax.FindCorrectSyntax(code[3..], this, (VariableType)vart, new KeyWord(), true, out index);
+            Executable e = Syntax.FindCorrectSyntax(code[3..], this, vart, new KeyWord(), true, out index);
             index += 3;
 
             // beep
             if (e == null) { return null; }
 
-            return new Executable(this, new KeyWord[] { code[0], code[1], Keywords[2], new KeyWord((VariableType)vart) }, new Executable[1] { e }, objs =>
+            return new Executable(this, new KeyWord[] { code[0], code[1], Keywords[2], new KeyWord(vart) }, new Executable[1] { e }, objs =>
             {
                 if (Syntax.Variables.Exists(v => v.Name == name))
                 {
                     throw new Exception($"Variable with name {name} already exists");
                 }
 
-                Syntax.Variables.Add(new Variable(name, (VariableType)vart, objs[0]));
+                Syntax.Variables.Add(new Variable(name, vart, objs[0]));
                 return objs[0];
-            }, new VariableType[] { (VariableType)vart });
+            }, VarType.Void);
         }
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
         {
             return CorrectSyntax(code, type, out _);
         }
 
-        private static VariableType? GetType(string name)
+        private static VarType GetType(string name)
         {
             return name switch
             {
-                "int" => VariableType.Int,
-                "float" => VariableType.Float,
-                "double" => VariableType.Double,
-                "bool" => VariableType.Bool,
-                "char" => VariableType.Char,
-                "string" => VariableType.String,
-                "Vector2" => VariableType.Vector2,
-                "Vector3" => VariableType.Vector3,
-                "Vector4" => VariableType.Vector4,
-                _ => null
+                "int" => VarType.Int,
+                "float" => VarType.Float,
+                "double" => VarType.Double,
+                "bool" => VarType.Bool,
+                "char" => VarType.Char,
+                "string" => VarType.String,
+                "Vector2" => VarType.Vector2,
+                "Vector3" => VarType.Vector3,
+                "Vector4" => VarType.Vector4,
+                _ => throw new ConsoleException("Unknown type")
             };
         }
     }
@@ -214,7 +219,7 @@ namespace CustomConsole
             new KeyWord(")", KeyWordType.BracketClosed),
         };
         public int InputCount => 0;
-        public VariableType ReturnType => VariableType.Void;
+        public IVarType ReturnType => VarType.Void;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
@@ -250,7 +255,7 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param = null)
         {
             index = 6;
 
@@ -277,9 +282,9 @@ namespace CustomConsole
 
                 Syntax.Variables.Remove(v);
                 return null;
-            }, null);
+            }, VarType.Void);
         }
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
         {
             return CorrectSyntax(code, type, out _);
         }

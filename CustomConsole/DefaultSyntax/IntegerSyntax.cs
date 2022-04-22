@@ -6,7 +6,7 @@ namespace CustomConsole
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Number) };
         public int InputCount => 0;
-        public VariableType ReturnType => VariableType.Int;
+        public IVarType ReturnType => VarType.Int;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
@@ -29,7 +29,7 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param = null)
         {
             index = 1;
 
@@ -40,12 +40,12 @@ namespace CustomConsole
                 return new Executable(this, new KeyWord[] { code[0] }, null, _ =>
                 {
                     return i;
-                }, null);
+                }, VarType.Int);
             }
 
             return null;
         }
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
         {
             if (code.Length != 1) { return null; }
 

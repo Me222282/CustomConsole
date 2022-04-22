@@ -11,7 +11,7 @@ namespace CustomConsole
             new KeyWord("\'", KeyWordType.Char)
         };
         public int InputCount => 0;
-        public VariableType ReturnType => VariableType.Char;
+        public IVarType ReturnType => VarType.Char;
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
@@ -25,7 +25,7 @@ namespace CustomConsole
             return code.Contains(new KeyWord("\'", KeyWordType.Char));
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param = null)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param = null)
         {
             index = 3;
 
@@ -49,9 +49,9 @@ namespace CustomConsole
                     new KeyWord("\'", KeyWordType.Char),
                     new KeyWord(text, KeyWordType.Char),
                     new KeyWord("\'", KeyWordType.Char)
-                }, null, _ => text[0], null);
+                }, null, _ => text[0], VarType.Char);
         }
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
         {
             if (code.Length != 3) { return null; }
 

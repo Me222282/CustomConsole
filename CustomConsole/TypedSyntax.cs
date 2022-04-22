@@ -4,11 +4,12 @@ namespace CustomConsole
 {
     public sealed class TypedSyntax : ISyntax
     {
-        public TypedSyntax(KeyWord[] keywords, VariableType[] possibleTypes, ExecuteHandle handle)
+        public TypedSyntax(KeyWord[] keywords, IVarType[] possibleTypes, IVarType returnType, ExecuteHandle handle)
         {
             Keywords = keywords;
             PossibleTypes = possibleTypes;
             Handle = handle;
+            ReturnType = returnType;
 
             InputCount = 0;
             for (int i = 0; i < keywords.Length; i++)
@@ -22,8 +23,8 @@ namespace CustomConsole
 
         public KeyWord[] Keywords { get; }
         public ExecuteHandle Handle { get; }
-        public VariableType ReturnType => VariableType.NonVoid;
-        public VariableType[] PossibleTypes { get; }
+        public IVarType ReturnType { get; }
+        public IVarType[] PossibleTypes { get; }
         public int InputCount { get; }
 
         public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
@@ -117,7 +118,7 @@ namespace CustomConsole
             // Reached end of this syntaxes keywords
             return wordIndex == Keywords.Length;
         }
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, VariableType type, out int index, object param)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param)
         {
             bool fill = param is bool b && b;
 
@@ -128,8 +129,8 @@ namespace CustomConsole
             int inputIndex = 0;
             Executable[] subExes = new Executable[InputCount];
 
-            VariableType[] inputTypes = new VariableType[InputCount];
-            VariableType highestType = type;
+            IVarType[] inputTypes = new IVarType[InputCount];
+            IVarType highestType = type;
 
             for (int i = 0; i < Keywords.Length; i++)
             {
@@ -154,17 +155,20 @@ namespace CustomConsole
                     // No valid syntax to match input could be found
                     if (e == null) { return null; }
 
-                    if (Keywords[i].InputType == VariableType.NonVoid)
+                    if (Keywords[i].InputType == VarType.NonVoid)
                     {
-                        VariableType vart = GetReturnType(e);
                         // Type not accepted
-                        if (!ValidType(vart)) { return null; }
+                        if (!ValidType(e.ReturnType)) { return null; }
 
-                        VariableType? vartn = highestType.GetHigherType(vart);
+                        IVarType vart;
+                        try
+                        {
+                            vart = highestType.GetHigherType(e.ReturnType);
+                        }
                         // Type not accepted
-                        if (vartn == null) { return null; }
+                        catch (ConsoleException) { return null; }
 
-                        highestType = (VariableType)vartn;
+                        highestType = vart;
                     }
 
                     inputTypes[inputIndex] = Keywords[i].InputType;
@@ -180,40 +184,30 @@ namespace CustomConsole
                 index++;
             }
 
+            KeyWord[] kws = new KeyWord[Keywords.Length];
+
             // Replace typed input types with highest type
-            for (int i = 0; i < inputTypes.Length; i++)
+            for (int i = 0; i < kws.Length; i++)
             {
-                if (inputTypes[i] == VariableType.NonVoid)
+                if (Keywords[i].Type == KeyWordType.Input &&
+                    Keywords[i].InputType == VarType.NonVoid)
                 {
-                    inputTypes[i] = highestType;
+                    kws[i] = new KeyWord(highestType);
+                    continue;
                 }
+
+                kws[i] = Keywords[i];
             }
 
-            return new Executable(this, Keywords, subExes, Handle, inputTypes);
+            return new Executable(this, kws, subExes, Handle,
+                ReturnType == VarType.NonVoid ? highestType : ReturnType);
         }
 
-        private static VariableType GetReturnType(Executable e)
-        {
-            if (e.Source is TypedSyntax)
-            {
-                VariableType current = VariableType.Any;
-
-                for (int i = 1; i < e.SubExecutables.Length; i++)
-                {
-                    VariableType? vartn = current.GetHigherType(GetReturnType(e.SubExecutables[i]));
-
-                    current = vartn ?? throw new BigException();
-                }
-            }
-
-            return e.Source.ReturnType;
-        }
-
-        private bool ValidType(VariableType type)
+        private bool ValidType(IVarType type)
         {
             for (int i = 0; i < PossibleTypes.Length; i++)
             {
-                if (type.Compatable(PossibleTypes[i]))
+                if (type.Compatible(PossibleTypes[i]))
                 {
                     return true;
                 }
@@ -222,7 +216,7 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, VariableType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
         {
             Executable e = CorrectSyntax(code, type, out int i, true);
 
