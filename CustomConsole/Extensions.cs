@@ -329,8 +329,70 @@ namespace CustomConsole
                 Vector3 => VarType.Vector3,
                 Vector4 => VarType.Vector4,
                 Variable => VarType.Variable,
+                IVarType => VarType.Type,
                 _ => throw new Exception("Unknown or unsupported type")
             };
+        }
+        public static void PassToType(ref object obj, IVarType type)
+        {
+            if (type != VarType.Void &&
+                !type.Nullable && (obj == null))
+            {
+                throw new Exception($"{type.Name} cannot be null");
+            }
+
+            IVarType objType = obj.GetVarType();
+
+            if (!objType.Compatible(type))
+            {
+                throw new Exception($"Cannot cast object of type {objType.Name} to {type.Name}");
+            }
+
+            switch (obj)
+            {
+                case int:
+                    if (type == VarType.Float)
+                    {
+                        obj = (float)(int)obj;
+                    }
+                    else if (type == VarType.Double)
+                    {
+                        obj = (double)(int)obj;
+                    }
+                    return;
+
+                case float:
+                    if (type == VarType.Double)
+                    {
+                        obj = (double)(float)obj;
+                    }
+                    return;
+
+                case Vector3:
+                    if (type == VarType.Vector2)
+                    {
+                        obj = (Vector2)(Vector3)obj;
+                    }
+                    return;
+
+                case Vector4:
+                    if (type == VarType.Vector3)
+                    {
+                        obj = (Vector3)(Vector4)obj;
+                    }
+                    else if (type == VarType.Vector2)
+                    {
+                        obj = (Vector2)(Vector4)obj;
+                    }
+                    return;
+
+                case char:
+                    if (type == VarType.String)
+                    {
+                        obj = obj.ToString();
+                    }
+                    return;
+            }
         }
     }
 }

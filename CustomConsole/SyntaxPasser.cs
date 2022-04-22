@@ -207,11 +207,11 @@ namespace CustomConsole
                 new StringSyntax(),
                 new CharSyntax(),
                 new BoolSyntax(),
+                new TypeSyntax(),
                 new GetVariableSyntax(),
                 new FunctionSyntax(),
                 new SetVariableSyntax(),
                 new CreateVariableSyntax(),
-                //new RemoveVariableSyntax(),
 
                 // Vector2
                 new Syntax(new KeyWord[]
@@ -274,7 +274,7 @@ namespace CustomConsole
                 //
                 // Integer Operators
                 //
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord("|", KeyWordType.Special),
@@ -290,7 +290,7 @@ namespace CustomConsole
                         _ => throw new BigException()
                     };
                 }),
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord("&", KeyWordType.Special),
@@ -306,7 +306,7 @@ namespace CustomConsole
                         _ => throw new BigException()
                     };
                 }),
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord(">", KeyWordType.Special),
@@ -323,7 +323,7 @@ namespace CustomConsole
                         _ => throw new BigException()
                     };
                 }),
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord("<", KeyWordType.Special),
@@ -340,7 +340,7 @@ namespace CustomConsole
                         _ => throw new BigException()
                     };
                 }),
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord("^", KeyWordType.Special),
@@ -360,7 +360,7 @@ namespace CustomConsole
                 //
                 // Normal Operators
                 //
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord("-", KeyWordType.Special),
@@ -386,7 +386,7 @@ namespace CustomConsole
                         _ => throw new BigException()
                     };
                 }),
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord("+", KeyWordType.Special),
@@ -427,7 +427,7 @@ namespace CustomConsole
                         _ => throw new BigException()
                     };
                 }),
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord("*", KeyWordType.Special),
@@ -453,7 +453,7 @@ namespace CustomConsole
                         _ => throw new BigException()
                     };
                 }),
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord(VarType.NonVoid),
                     new KeyWord("/", KeyWordType.Special),
@@ -483,7 +483,7 @@ namespace CustomConsole
                 //
                 // Extra Operators
                 //
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord("-", KeyWordType.Special),
                     new KeyWord(VarType.NonVoid)
@@ -510,7 +510,7 @@ namespace CustomConsole
                         _ => throw new BigException()
                     };
                 }),
-                new TypedSyntax(new KeyWord[]
+                new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord("|", KeyWordType.Special),
                     new KeyWord(VarType.NonVoid),

@@ -44,9 +44,18 @@ namespace CustomConsole
         }
         public override bool Equals(object obj)
         {
-            return obj is KeyWord k &&
-                Word == k.Word &&
-                Type == k.Type;
+            if (obj is KeyWord k)
+            {
+                if (k.Word == "" || Word == "")
+                {
+                    return Type == k.Type;
+                }
+
+                return Word == k.Word &&
+                    Type == k.Type;
+            }
+
+            return false;
         }
 
         public static bool operator ==(KeyWord l, KeyWord r)

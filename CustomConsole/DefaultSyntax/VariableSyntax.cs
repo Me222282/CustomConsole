@@ -15,7 +15,6 @@ namespace CustomConsole
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
-            
             index = 1;
             /*
             if (code.Length == 0) { return null; }
@@ -42,7 +41,7 @@ namespace CustomConsole
                 return v.Getter();
             }, v.Type);*/
 
-            if (code.Length == 0 || code[0].Type != KeyWordType.Word) { return null; }
+            if (!(code.Length > 0 && code[0].Type == KeyWordType.Word)) { return null; }
 
             string word = code[0].Word;
 
@@ -158,7 +157,7 @@ namespace CustomConsole
     {
         public KeyWord[] Keywords { get; } = new KeyWord[4]
         {
-            new KeyWord(null, KeyWordType.Word),
+            new KeyWord(VarType.Type),
             new KeyWord(null, KeyWordType.Word),
             new KeyWord("=", KeyWordType.Special),
             new KeyWord("", KeyWordType.Input, (int)VariableType.NonVoid)
@@ -169,21 +168,13 @@ namespace CustomConsole
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {
-            // Cannot fit asignment statment
             if (code.Length < 4) { return false; }
 
-            return code[2].Word == "=" &&
-                code[0].Type == KeyWordType.Word &&
-                code[1].Type == KeyWordType.Word;
-        }
-        public bool PossibleSyntax(ReadOnlySpan<KeyWord> code)
-        {
             for (int i = 0; i < code.Length; i++)
             {
-                if (code[i].Type == KeyWordType.Word &&
-                    code.Length > (i + 2) &&
-                    code[i + 1].Type == KeyWordType.Word &&
-                    code[i + 2].Word == "=")
+                if (code[i].Word == "=" &&
+                    (i - 1) > 0 &&
+                    code[i - 1].Type == KeyWordType.Word)
                 {
                     return true;
                 }
@@ -191,63 +182,46 @@ namespace CustomConsole
 
             return false;
         }
+        public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => ValidSyntax(code);
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
-            index = -1;
+            index = 0;
 
             if (code.Length < 4) { return null; }
-            if (code[2].Word != "=" || code[1].Type != KeyWordType.Word) { return null; }
 
-            string name = code[1].Word;
+            Executable t = source.FindCorrectSyntax(code, new LastFind(code, this), VarType.Type, new KeyWord("", KeyWordType.Word), false, out index);
+            if (t == null) { return null; }
 
-            VarType vart;
-            try
-            {
-                vart = GetType(code[0].Word);
-            }
-            catch (ConsoleException) { return null; }
+            if (!(code.Length > (index + 2) &&
+                code[index].Type == KeyWordType.Word &&
+                code[index + 1].Word == "="))
+            { return null; }
 
-            // some reasons why a variable cannot be made
-            if (vart == null) { return null; }
+            string name = code[index].Word;
 
-            Executable e = source.FindCorrectSyntax(code[3..], new LastFind(code, this), vart, nextKeyword, fill, out index);
-            index += 3;
-
+            Executable e = source.FindCorrectSyntax(code[(index + 2)..], new LastFind(code, this), VarType.NonVoid, nextKeyword, fill, out int addIndex);
+            index += addIndex;
             // beep
             if (e == null) { return null; }
 
-            return new Executable(this, new KeyWord[] { code[0], code[1], Keywords[2], new KeyWord(vart) }, new Executable[1] { e }, objs =>
+            return new Executable(this, new KeyWord[] { new KeyWord(VarType.Type), code[1], Keywords[2], new KeyWord(e.ReturnType) }, new Executable[2] { t, e }, objs =>
             {
                 if (SyntaxPasser.Variables.Exists(v => v.Name == name))
                 {
                     throw new Exception($"Variable with name {name} already exists");
                 }
 
-                SyntaxPasser.Variables.Add(new Variable(name, vart, objs[0]));
+                IVarType type = (IVarType)objs[0];
+                Extensions.PassToType(ref objs[1], type);
+
+                SyntaxPasser.Variables.Add(new Variable(name, type, objs[1]));
                 return objs[0];
             }, VarType.Void);
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
             return CorrectSyntax(code, type, source, new KeyWord(), out _, true);
-        }
-
-        private static VarType GetType(string name)
-        {
-            return name switch
-            {
-                "int" => VarType.Int,
-                "float" => VarType.Float,
-                "double" => VarType.Double,
-                "bool" => VarType.Bool,
-                "char" => VarType.Char,
-                "string" => VarType.String,
-                "Vector2" => VarType.Vector2,
-                "Vector3" => VarType.Vector3,
-                "Vector4" => VarType.Vector4,
-                _ => throw new ConsoleException("Unknown type")
-            };
         }
     }
 }

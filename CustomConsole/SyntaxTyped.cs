@@ -2,9 +2,9 @@
 
 namespace CustomConsole
 {
-    public sealed class TypedSyntax : ISyntax
+    public sealed class SyntaxTyped : ISyntax
     {
-        public TypedSyntax(KeyWord[] keywords, IVarType[] possibleTypes, IVarType returnType, ExecuteHandle handle)
+        public SyntaxTyped(KeyWord[] keywords, IVarType[] possibleTypes, IVarType returnType, ExecuteHandle handle)
         {
             Keywords = keywords;
             PossibleTypes = possibleTypes;
@@ -20,7 +20,7 @@ namespace CustomConsole
                 }
             }
         }
-        public TypedSyntax(KeyWord[] keywords, IVarType[] possibleTypes, IVarType returnType, ICodeFormat codeFormat, ExecuteHandle handle)
+        public SyntaxTyped(KeyWord[] keywords, IVarType[] possibleTypes, IVarType returnType, ICodeFormat codeFormat, ExecuteHandle handle)
             : this(keywords, possibleTypes, returnType, handle)
         {
             DisplayFormat = codeFormat;

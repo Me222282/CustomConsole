@@ -133,57 +133,7 @@ namespace CustomConsole
 
                 if (_inputTypes.Length < (i + 1)) { continue; }
 
-                //Console.WriteLine($"{this}, param {i} is type {@params[i].GetType()}");
-
-                if (_inputTypes[i] != VarType.Void &&
-                    !_inputTypes[i].Nullable && (@params[i] == null))
-                {
-                    throw new Exception($"{_inputTypes[i].Name} cannot be null");
-                }
-
-                if (@params[i] is int @int)
-                {
-                    if (_inputTypes[i] == VarType.Float)
-                    {
-                        @params[i] = (float)@int;
-                    }
-                    else if (_inputTypes[i] == VarType.Double)
-                    {
-                        @params[i] = (double)@int;
-                    }
-                }
-                if (@params[i] is float @float)
-                {
-                    if (_inputTypes[i] == VarType.Double)
-                    {
-                        @params[i] = (double)@float;
-                    }
-                }
-                else if (@params[i] is Vector3 vector3)
-                {
-                    if (_inputTypes[i] == VarType.Vector2)
-                    {
-                        @params[i] = (Vector2)vector3;
-                    }
-                }
-                else if (@params[i] is Vector4 vector4)
-                {
-                    if (_inputTypes[i] == VarType.Vector3)
-                    {
-                        @params[i] = (Vector3)vector4;
-                    }
-                    else if (_inputTypes[i] == VarType.Vector2)
-                    {
-                        @params[i] = (Vector2)vector4;
-                    }
-                }
-                else if (@params[i] is char c)
-                {
-                    if (_inputTypes[i] == VarType.String)
-                    {
-                        @params[i] = c.ToString();
-                    }
-                }
+                Extensions.PassToType(ref @params[i], _inputTypes[i]);
             }
 
             return Function(@params);

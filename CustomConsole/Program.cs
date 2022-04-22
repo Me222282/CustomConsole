@@ -28,9 +28,14 @@ namespace CustomConsole
                 return Math.Round((double)objs[0]);
             }));
 
-            SyntaxPasser.Functions.Add(new Function(new string[] { "dumb" }, new IVarType[] { VarType.Void }, VarType.Void, objs =>
+            SyntaxPasser.Syntaxes.Add(new Syntax(new KeyWord[]
             {
-                return null;
+                new KeyWord(VarType.Variable),
+                new KeyWord(".", KeyWordType.Special),
+                new KeyWord("Type", KeyWordType.Word),
+            }, VarType.Type, objs =>
+            {
+                return ((Variable)objs[0]).Type;
             }));
 
             SyntaxPasser.Functions.Add(new Function(new string[] { "Console", "WriteLine" }, new IVarType[] { VarType.NonVoid }, VarType.Void, objs =>
