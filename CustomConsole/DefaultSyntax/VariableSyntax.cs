@@ -10,18 +10,14 @@ namespace CustomConsole
         public ICodeFormat DisplayFormat { get; } = new DefaultCodeFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
-        {
-            string word = code[0].Word;
-
-            return code.Length == 1 &&
-                SyntaxPasser.Variables.Exists(v => v.Name == word);
-        }
+            => code.Length == 1 && code[0].Type == KeyWordType.Word;
         public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => true;
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, bool fill)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
+            
             index = 1;
-
+            /*
             if (code.Length == 0) { return null; }
 
             string word = code[0].Word;
@@ -44,13 +40,29 @@ namespace CustomConsole
             return new Executable(this, new KeyWord[] { code[0] }, null, _ =>
             {
                 return v.Getter();
-            }, v.Type);
+            }, v.Type);*/
+
+            if (code.Length == 0 || code[0].Type != KeyWordType.Word) { return null; }
+
+            string word = code[0].Word;
+
+            return new Executable(this, new KeyWord[] { code[0] }, null, _ =>
+            {
+                Variable v = SyntaxPasser.Variables.Find(v => v.Name == word);
+                // No variable found
+                if (v == null) { throw new Exception($"Coulnd't find variable with name {word}"); }
+
+                // Reference is to the variable
+                if (type == VarType.Variable) { return v; }
+
+                return v.Getter();
+            }, VarType.NonVoid);
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
             if (code.Length != 1) { return null; }
 
-            return CorrectSyntax(code, type, source, out _, true);
+            return CorrectSyntax(code, type, source, new KeyWord(), out _, true);
         }
     }
 
@@ -71,10 +83,8 @@ namespace CustomConsole
             // Cannot fit asignment statment
             if (code.Length < 3) { return false; }
 
-            string word = code[0].Word;
-
             return code[1].Word == "=" &&
-                SyntaxPasser.Variables.Exists(v => v.Name == word);
+                code[0].Type == KeyWordType.Word;
         }
         public bool PossibleSyntax(ReadOnlySpan<KeyWord> code)
         {
@@ -90,10 +100,10 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, bool fill)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
-            index = -1;
-
+            index = 0;
+            /*
             if (!(code.Length > 2 && code[1].Word == "="))
             {
                 return null;
@@ -112,11 +122,35 @@ namespace CustomConsole
             {
                 v.Setter(objs[0]);
                 return objs[0];
+            }, VarType.Void);*/
+
+            if (code.Length == 0 || code[0].Type != KeyWordType.Word) { return null; }
+
+            string word = code[0].Word;
+
+            Executable e = source.FindCorrectSyntax(code[2..], new LastFind(code, this), VarType.NonVoid, nextKeyword, fill, out index);
+            index += 2;
+            // No valid syntax could be found
+            if (e == null) { return null; }
+
+            return new Executable(this, new KeyWord[] { code[0], Keywords[1], new KeyWord(e.ReturnType) }, new Executable[1] { e }, objs =>
+            {
+                Variable v = SyntaxPasser.Variables.Find(v => v.Name == word);
+                // No variable found
+                if (v == null) { throw new Exception($"Coulnd't find variable with name {word}"); }
+
+                if (!objs[0].GetVarType().Compatible(v.Type))
+                {
+                    throw new Exception($"Variable {v.Name}'s type is not compatible with assignment type");
+                }
+
+                v.Setter(objs[0]);
+                return objs[0];
             }, VarType.Void);
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
-            return CorrectSyntax(code, type, source, out _, true);
+            return CorrectSyntax(code, type, source, new KeyWord(), out _, true);
         }
     }
 
@@ -158,7 +192,7 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, bool fill)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
             index = -1;
 
@@ -177,7 +211,7 @@ namespace CustomConsole
             // some reasons why a variable cannot be made
             if (vart == null) { return null; }
 
-            Executable e = source.FindCorrectSyntax(code[3..], this, vart, new KeyWord(), fill, out index);
+            Executable e = source.FindCorrectSyntax(code[3..], new LastFind(code, this), vart, nextKeyword, fill, out index);
             index += 3;
 
             // beep
@@ -196,7 +230,7 @@ namespace CustomConsole
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
-            return CorrectSyntax(code, type, source, out _, true);
+            return CorrectSyntax(code, type, source, new KeyWord(), out _, true);
         }
 
         private static VarType GetType(string name)

@@ -118,12 +118,14 @@ namespace CustomConsole
                     wordIndex++;
                     continue;
                 }
+
+                if (wordIndex == Keywords.Length) { break; }
             }
 
             // Reached end of this syntaxes keywords
             return wordIndex == Keywords.Length;
         }
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, bool fill)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
             index = 0;
 
@@ -142,7 +144,7 @@ namespace CustomConsole
                 {
                     ReadOnlySpan<KeyWord> slice = code[index..];
 
-                    KeyWord nextKW = new KeyWord();
+                    KeyWord nextKW = nextKeyword;
                     if (Keywords.Length > (i + 1))
                     {
                         nextKW = Keywords[i + 1];
@@ -152,7 +154,7 @@ namespace CustomConsole
                             lastI + 1 > slice.Length ? lastI : (lastI + 1));
                     }
 
-                    Executable e = source.FindCorrectSyntax(slice, this, Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
+                    Executable e = source.FindCorrectSyntax(slice, new LastFind(code, this), Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
                     index += addIndex;
 
                     // No valid syntax to match input could be found
@@ -221,7 +223,7 @@ namespace CustomConsole
 
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
-            Executable e = CorrectSyntax(code, type, source, out int i, true);
+            Executable e = CorrectSyntax(code, type, source, new KeyWord(), out int i, true);
 
             // Not correct syntax
             if (code.Length != i) { return null; }

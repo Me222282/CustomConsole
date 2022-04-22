@@ -133,7 +133,13 @@ namespace CustomConsole
 
                 if (_inputTypes.Length < (i + 1)) { continue; }
 
-                Console.WriteLine($"{this}, param {i} is type {@params[i].GetType()}");
+                //Console.WriteLine($"{this}, param {i} is type {@params[i].GetType()}");
+
+                if (_inputTypes[i] != VarType.Void &&
+                    !_inputTypes[i].Nullable && (@params[i] == null))
+                {
+                    throw new Exception($"{_inputTypes[i].Name} cannot be null");
+                }
 
                 if (@params[i] is int @int)
                 {
@@ -169,6 +175,13 @@ namespace CustomConsole
                     else if (_inputTypes[i] == VarType.Vector2)
                     {
                         @params[i] = (Vector2)vector4;
+                    }
+                }
+                else if (@params[i] is char c)
+                {
+                    if (_inputTypes[i] == VarType.String)
+                    {
+                        @params[i] = c.ToString();
                     }
                 }
             }

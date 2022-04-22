@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Zene.Structs;
 
 namespace CustomConsole
 {
@@ -310,6 +311,26 @@ namespace CustomConsole
             }
 
             return true;
+        }
+
+        public static IVarType GetVarType(this object obj)
+        {
+            if (obj == null) { return VarType.Void; }
+
+            return obj switch
+            {
+                int => VarType.Int,
+                float => VarType.Float,
+                double => VarType.Double,
+                bool => VarType.Bool,
+                char => VarType.Char,
+                string => VarType.String,
+                Vector2 => VarType.Vector2,
+                Vector3 => VarType.Vector3,
+                Vector4 => VarType.Vector4,
+                Variable => VarType.Variable,
+                _ => throw new Exception("Unknown or unsupported type")
+            };
         }
     }
 }

@@ -32,7 +32,7 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, bool fill)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
             index = 2;
 
@@ -53,7 +53,7 @@ namespace CustomConsole
         {
             if (code.Length != 2) { return null; }
 
-            return CorrectSyntax(code, type, source, out _, true);
+            return CorrectSyntax(code, type, source, new KeyWord(), out _, true);
         }
     }
 }

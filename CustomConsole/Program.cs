@@ -5,6 +5,8 @@ using Zene.Graphics;
 using Zene.Structs;
 using System.Text;
 using System.Diagnostics;
+using System.IO;
+using System.Collections.Generic;
 
 namespace CustomConsole
 {
@@ -28,9 +30,24 @@ namespace CustomConsole
 
             SyntaxPasser.Functions.Add(new Function(new string[] { "dumb" }, new IVarType[] { VarType.Void }, VarType.Void, objs =>
             {
-                Console.WriteLine($"This is dumb {SyntaxPasser.Variables[0].Getter()}");
                 return null;
             }));
+
+            SyntaxPasser.Functions.Add(new Function(new string[] { "Console", "WriteLine" }, new IVarType[] { VarType.NonVoid }, VarType.Void, objs =>
+            {
+                Console.WriteLine(objs[0]);
+                return null;
+            }));
+            SyntaxPasser.Functions.Add(new Function(new string[] { "Console", "ReadLine" }, null, VarType.String, objs =>
+            {
+                return Console.ReadLine();
+            }));
+
+            SyntaxPasser.Variables.Add(new Variable("null", VarType.NonVoid, () => null, _ => throw new Exception("Cannot set null")));
+
+            ExecuteFile("resources/zene.txt");
+            Console.ReadLine();
+            return;
 
             Stopwatch s = new Stopwatch();
             s.Start();
@@ -38,12 +55,10 @@ namespace CustomConsole
             //KeyWord[] kws = "Maths.Round(5.3f) + 5.2d + bean".FindKeyWords();
             KeyWord[] kws = "|-2| | 4".FindKeyWords();
 
-            SyntaxPasser sp = new SyntaxPasser();
-
             Executable e;
             try
             {
-                e = sp.Decode(kws, VarType.Any);
+                e = PassLine(kws);
             }
             catch (ConsoleException ex)
             {
@@ -70,6 +85,60 @@ namespace CustomConsole
             Console.ReadLine();
         }
         
+        private static Executable PassLine(ReadOnlySpan<KeyWord> line)
+        {
+            SyntaxPasser sp = new SyntaxPasser();
+            return sp.Decode(line);
+        }
+        private static void ExecuteFile(string path)
+        {
+            string sourceCode = File.ReadAllText(path);
+
+            ReadOnlySpan<KeyWord> keywords = sourceCode.FindKeyWords();
+            int nextLineIndex = 0;
+
+            List<Executable> executables = new List<Executable>();
+
+            for (int i = 0; i < keywords.Length; i++)
+            {
+                // End of line
+                if (keywords[i].Word == ";")
+                {
+                    Executable e;
+                    try
+                    {
+                        e = PassLine(keywords[nextLineIndex..i]);
+                    }
+                    catch (ConsoleException ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine($"Line {executables.Count}");
+                        return;
+                    }
+                    // No code in line
+                    if (e == null) { continue; }
+
+                    executables.Add(e);
+
+                    nextLineIndex = i + 1;
+                    continue;
+                }
+            }
+
+            for (int i = 0; i < executables.Count; i++)
+            {
+                try
+                {
+                    executables[i].Execute();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"{ex.GetType().Name} was thrown with message \"{ex.Message}\"");
+                    return;
+                }
+            }
+        }
+
         public Program(int width, int height, string title)
          : base(width, height, title)
         {

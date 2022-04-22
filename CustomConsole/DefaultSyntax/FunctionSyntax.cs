@@ -63,7 +63,7 @@ namespace CustomConsole
         }
         public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => true;
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, bool fill)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
             index = 0;
 
@@ -116,7 +116,7 @@ namespace CustomConsole
                     nextK = new KeyWord(")", KeyWordType.BracketClosed);
                 }
 
-                Executable e = source.FindCorrectSyntax(code[index..], this, func.Parameters[i], nextK, false, out int addIndex);
+                Executable e = source.FindCorrectSyntax(code[index..], new LastFind(code, this), func.Parameters[i], nextK, false, out int addIndex);
                 index += addIndex + 1;
 
                 // No valid syntax could be found
@@ -164,7 +164,7 @@ namespace CustomConsole
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
-            return CorrectSyntax(code, type, source, out _, true);
+            return CorrectSyntax(code, type, source, new KeyWord(), out _, true);
         }
 
         private static bool FuncExists(string[] path, int length)

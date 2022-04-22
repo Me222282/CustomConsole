@@ -2,6 +2,9 @@
 {
     public interface IVarType
     {
+        public bool Nullable { get; }
+        public string Name { get; }
+
         public IVarType[] ImplicitTo { get; }
 
         public bool Equals(IVarType type);

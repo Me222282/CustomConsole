@@ -55,6 +55,8 @@ namespace CustomConsole
         }
         public Executable Decode(ReadOnlySpan<KeyWord> syntax, IVarType returnType)
         {
+            if (syntax.Length == 0) { return null; }
+
             _possibleSyntaxes.Clear();
 
             for (int i = 0; i < Syntaxes.Count; i++)
@@ -68,8 +70,9 @@ namespace CustomConsole
 
             return FindSyntax(syntax, returnType);
         }
+        public Executable Decode(ReadOnlySpan<KeyWord> syntax) => Decode(syntax, VarType.Any);
 
-        public Executable FindCorrectSyntax(ReadOnlySpan<KeyWord> syntax, ISyntax source, IVarType returnType, KeyWord nextWord, bool fill, out int nextIndex)
+        public Executable FindCorrectSyntax(ReadOnlySpan<KeyWord> syntax, LastFind lastCall, IVarType returnType, KeyWord nextWord, bool fill, out int nextIndex)
         {
             nextIndex = 0;
 
@@ -86,8 +89,10 @@ namespace CustomConsole
 
             for (int i = 0; i < _possibleSyntaxes.Count; i++)
             {
-                // Removes some possibility of stackoverflow
-                if (!fill && _possibleSyntaxes[i].EqualKeyWords(source)) { continue; }
+                // Removes a possibility of stackoverflow where this function would
+                // be called from the same source with the same syntax over and over.
+                if (lastCall.LastSyntax == syntax &&
+                    lastCall.Source == _possibleSyntaxes[i]) { continue; }
 
                 // Null is Void
                 if (_possibleSyntaxes[i].ReturnType == null &&
@@ -97,7 +102,7 @@ namespace CustomConsole
                 if (_possibleSyntaxes[i].ReturnType != null &&
                     !_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
 
-                Executable e = _possibleSyntaxes[i].CorrectSyntax(syntax, returnType, this, out nextIndex, fill);
+                Executable e = _possibleSyntaxes[i].CorrectSyntax(syntax, returnType, this, nextWord, out nextIndex, fill);
 
                 // Not correct syntax
                 if (e == null) { continue; }
@@ -279,8 +284,6 @@ namespace CustomConsole
                     VarType.Int,
                 }, VarType.NonVoid, (objs) =>
                 {
-                    Console.WriteLine(objs[0].GetType());
-
                     return objs[0] switch
                     {
                         int => (int)objs[0] | (int)objs[1],
@@ -520,7 +523,7 @@ namespace CustomConsole
                 }, VarType.NonVoid,
                 new CodeFormat("|"),
                 (objs) =>
-                {
+                {/*
                     Console.WriteLine(objs[0].GetType());
 
                     
@@ -530,14 +533,13 @@ namespace CustomConsole
                         float => Math.Abs((float)objs[0]),
                         int => Math.Abs((int)objs[0]),
                         _ => throw new BigException()
-                    };
-                    /*
+                    };*/
+                    
                     object o;
                     switch (objs[0])
                     {
                         case int:
                             o = Math.Abs((int)objs[0]);
-                            Console.WriteLine("Cool");
                             break;
 
                         case float:
@@ -546,14 +548,13 @@ namespace CustomConsole
 
                         case double:
                             o = Math.Abs((double)objs[0]);
-                            Console.WriteLine("STUPID MICROSOFT CANNOT DO ANYTHING");
                             break;
 
                         default:
                             throw new BigException();
-                    }*/
+                    }
 
-                    Console.WriteLine(o.GetType());
+                    //Console.WriteLine(o.GetType());
                     return o;
                 }),
             };

@@ -1,0 +1,8 @@
+﻿int i = 5 + 5;
+
+Console.WriteLine(i);
+
+memory.Free(i);
+
+Console.ReadLine();
+Console.WriteLine(i);

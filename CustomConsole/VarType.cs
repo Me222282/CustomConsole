@@ -7,7 +7,7 @@ namespace CustomConsole
     {
         private static object _nextId = (uint)0;
 
-        public VarType(IVarType[] implicits)
+        public VarType(IVarType[] implicits, string name, bool nullable)
         {
             lock (_nextId)
             {
@@ -16,7 +16,12 @@ namespace CustomConsole
             }
 
             ImplicitTo = implicits;
+            Nullable = nullable;
+            Name = name;
         }
+
+        public bool Nullable { get; }
+        public string Name { get; }
 
         public uint Id { get; }
         /// <summary>
@@ -43,32 +48,36 @@ namespace CustomConsole
 
         public static VarType Void { get; } = null;
 
-        public static AnyType NonVoid { get; } = new AnyType(false);
-        public static AnyType Any { get; } = new AnyType(true);
+        public static AnyType NonVoid { get; } = new AnyType(false, "NonVoid");
+        public static AnyType Any { get; } = new AnyType(true, "Any");
 
-        public static VarType Double { get; } = new VarType(null);
-        public static VarType Float { get; } = new VarType(new IVarType[] { Double });
-        public static VarType Int { get; } = new VarType(new IVarType[] { Float, Double });
+        public static VarType Double { get; } = new VarType(null, "double", false);
+        public static VarType Float { get; } = new VarType(new IVarType[] { Double }, "float", false);
+        public static VarType Int { get; } = new VarType(new IVarType[] { Float, Double }, "int", false);
 
-        public static VarType Bool { get; } = new VarType(null);
+        public static VarType Bool { get; } = new VarType(null, "bool", false);
 
-        public static VarType String { get; } = new VarType(null);
-        public static VarType Char { get; } = new VarType(new IVarType[] { String });
+        public static VarType String { get; } = new VarType(null, "string", true);
+        public static VarType Char { get; } = new VarType(new IVarType[] { String }, "char", false);
 
-        public static VarType Vector2 { get; } = new VarType(null);
-        public static VarType Vector3 { get; } = new VarType(new IVarType[] { Vector2 });
-        public static VarType Vector4 { get; } = new VarType(new IVarType[] { Vector3, Vector2 });
+        public static VarType Vector2 { get; } = new VarType(null, "Vector2", false);
+        public static VarType Vector3 { get; } = new VarType(new IVarType[] { Vector2 }, "Vector3", false);
+        public static VarType Vector4 { get; } = new VarType(new IVarType[] { Vector3, Vector2 }, "Vector4", false);
 
-        public static VarType Type { get; } = new VarType(null);
-        public static VarType Variable { get; } = new VarType(null);
+        public static VarType Type { get; } = new VarType(null, "Type", true);
+        public static VarType Variable { get; } = new VarType(null, "Variable", true);
 
         public class AnyType : IVarType
         {
-            public AnyType(bool @void)
+            public AnyType(bool @void, string name)
             {
                 IncludeVoid = @void;
+                Name = name;
             }
 
+            public string Name { get; }
+
+            public bool Nullable => true;
             public bool IncludeVoid { get; }
             public IVarType[] ImplicitTo => null;
 
