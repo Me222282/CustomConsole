@@ -29,7 +29,7 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param = null)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, object param = null)
         {
             index = 1;
 
@@ -45,11 +45,11 @@ namespace CustomConsole
 
             return null;
         }
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
             if (code.Length != 1) { return null; }
 
-            return CorrectSyntax(code, type, out _);
+            return CorrectSyntax(code, type, source, out _);
         }
     }
 }

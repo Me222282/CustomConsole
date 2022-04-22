@@ -21,7 +21,7 @@ namespace CustomConsole
             Core.Terminate();*/
 
             int bean = 5;
-            Syntax.Variables.Add(new Variable("bean", VarType.Int, () =>
+            SyntaxPasser.Variables.Add(new Variable("bean", VarType.Int, () =>
             {
                 return bean;
             }, objs =>
@@ -34,10 +34,12 @@ namespace CustomConsole
 
             KeyWord[] kws = "5.3d + 5.2f + 2".FindKeyWords();
 
+            SyntaxPasser sp = new SyntaxPasser();
+
             Executable e;
             try
             {
-                e = Syntax.Decode(kws, VarType.Any);
+                e = sp.Decode(kws, VarType.Any);
             }
             catch (ConsoleException ex)
             {

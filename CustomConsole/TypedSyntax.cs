@@ -68,7 +68,7 @@ namespace CustomConsole
                 {
                     if (code[i].Word == "(")
                     {
-                        int end = Syntax.FindClosingBracket(code, i);
+                        int end = SyntaxPasser.FindClosingBracket(code, i);
 
                         if (end == -1)
                         {
@@ -118,7 +118,7 @@ namespace CustomConsole
             // Reached end of this syntaxes keywords
             return wordIndex == Keywords.Length;
         }
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, object param)
         {
             bool fill = param is bool b && b;
 
@@ -149,7 +149,7 @@ namespace CustomConsole
                             lastI + 1 > slice.Length ? lastI : (lastI + 1));
                     }
 
-                    Executable e = Syntax.FindCorrectSyntax(slice, this, Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
+                    Executable e = source.FindCorrectSyntax(slice, this, Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
                     index += addIndex;
 
                     // No valid syntax to match input could be found
@@ -216,9 +216,9 @@ namespace CustomConsole
             return false;
         }
 
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type)
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
-            Executable e = CorrectSyntax(code, type, out int i, true);
+            Executable e = CorrectSyntax(code, type, source, out int i, true);
 
             // Not correct syntax
             if (code.Length != i) { return null; }

@@ -11,8 +11,8 @@ namespace CustomConsole
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code);
         public bool PossibleSyntax(ReadOnlySpan<KeyWord> code);
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, out int index, object param = null);
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, object param = null);
 
-        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type);
+        public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source);
     }
 }
