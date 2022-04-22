@@ -19,13 +19,18 @@ namespace CustomConsole
                 }
             }
         }
+        public Syntax(KeyWord[] keywords, IVarType returnType, ICodeFormat codeFormat, ExecuteHandle handle)
+            : this(keywords, returnType, handle)
+        {
+            DisplayFormat = codeFormat;
+        }
 
         public KeyWord[] Keywords { get; }
         public ExecuteHandle Handle { get; }
         public IVarType ReturnType { get; }
         public int InputCount { get; }
 
-        public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
+        public ICodeFormat DisplayFormat { get; set; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {

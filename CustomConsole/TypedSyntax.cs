@@ -20,6 +20,11 @@ namespace CustomConsole
                 }
             }
         }
+        public TypedSyntax(KeyWord[] keywords, IVarType[] possibleTypes, IVarType returnType, ICodeFormat codeFormat, ExecuteHandle handle)
+            : this(keywords, possibleTypes, returnType, handle)
+        {
+            DisplayFormat = codeFormat;
+        }
 
         public KeyWord[] Keywords { get; }
         public ExecuteHandle Handle { get; }
@@ -27,7 +32,7 @@ namespace CustomConsole
         public IVarType[] PossibleTypes { get; }
         public int InputCount { get; }
 
-        public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
+        public ICodeFormat DisplayFormat { get; set; } = new DefaultFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {
