@@ -160,6 +160,14 @@ namespace CustomConsole
                     continue;
                 }
 
+                // Underscores can be insinde numbers
+                if (inNumber && c == '_' &&
+                    // not at end of string
+                    code.Length > (i + 10) &&
+                    char.IsNumber(code[i + 1]))
+                {
+                    continue;
+                }
                 if (inNumber && c != '.' && !char.IsNumber(c))
                 {
                     newWord = true;
