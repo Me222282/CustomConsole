@@ -130,14 +130,6 @@ namespace CustomConsole
 
             int inputIndex = 0;
             Executable[] subExes = new Executable[InputCount];
-            /*
-            if (Keywords.Length > 1 &&
-                // First keyword is input
-                Keywords[0].Word == "" &&
-                Keywords[0].Word == )
-            {
-
-            }*/
 
             for (int i = 0; i < Keywords.Length; i++)
             {
@@ -168,10 +160,7 @@ namespace CustomConsole
                 }
 
                 // Syntax doesn't match
-                if (code[index].Word != Keywords[i].Word)
-                {
-                    return null;
-                }
+                if (!(code.Length > index && code[index].Word == Keywords[i].Word)) { return null; }
 
                 index++;
             }

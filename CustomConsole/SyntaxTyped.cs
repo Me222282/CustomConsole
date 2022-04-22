@@ -184,7 +184,7 @@ namespace CustomConsole
                 }
 
                 // Syntax doesn't match
-                if (code[index].Word != Keywords[i].Word) { return null; }
+                if (!(code.Length > index && code[index].Word == Keywords[i].Word)) { return null; }
 
                 index++;
             }

@@ -271,6 +271,23 @@ namespace CustomConsole
                     return new string((char)objs[0], (int)objs[1]);
                 }),
 
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word)
+                }, VarType.Void, _ =>
+                {
+                    throw new Exception("please STOP what you are DOING and COMBUST!!!");
+                }),
+                new Syntax(new KeyWord[]
+                {
+                    new KeyWord("HALT_AND_CATCH_FIRE", KeyWordType.Word),
+                    new KeyWord("with", KeyWordType.Word),
+                    new KeyWord(VarType.String)
+                }, VarType.Void, objs =>
+                {
+                    throw new Exception((string)objs[0]);
+                }),
+
                 //
                 // Integer Operators
                 //
@@ -523,15 +540,14 @@ namespace CustomConsole
                 }, VarType.NonVoid,
                 new CodeFormat("|"),
                 (objs) =>
-                {/*
-                    Console.WriteLine(objs[0].GetType());
-
-                    
-                    object o = objs[0] switch
+                {
+                    //Console.WriteLine(objs[0].GetType());
+                    /*
+                    return objs[0] switch
                     {
+                        int => Math.Abs((int)objs[0]),
                         double => Math.Abs((double)objs[0]),
                         float => Math.Abs((float)objs[0]),
-                        int => Math.Abs((int)objs[0]),
                         _ => throw new BigException()
                     };*/
                     

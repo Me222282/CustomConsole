@@ -1,8 +1,9 @@
-﻿int number = 0;
+﻿int number = |-5|;
 
 number.Type i = 5 + 5;
 
 Console.WriteLine(i);
+Console.WriteLine(int);
 
 memory.Free(i);
 memory.Free(number);
