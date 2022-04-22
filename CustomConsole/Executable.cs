@@ -41,7 +41,6 @@ namespace CustomConsole
         public Executable[] SubExecutables { get; }
         
         public IVarType ReturnType { get; }
-
         private readonly IVarType[] _inputTypes;
 
         public KeyWord[] CompleteSyntax
@@ -57,7 +56,7 @@ namespace CustomConsole
                     {
                         if (SubExecutables.Length < subSyntaxCount + 1)
                         {
-                            throw new Exception($"Incompatible {nameof(Executable)} data");
+                            throw new Exception($"Insufficient {nameof(Executable)} data");
                         }
 
                         combinedWords.AddRange(SubExecutables[subSyntaxCount].CompleteSyntax);
@@ -77,6 +76,11 @@ namespace CustomConsole
         public virtual object Execute()
         {
             object[] @params = new object[SubExecutables.Length];
+
+            if (SubExecutables.Length != _inputTypes.Length)
+            {
+                throw new Exception($"Insufficient {nameof(Executable)} data");
+            }
 
             for (int i = 0; i < @params.Length; i++)
             {

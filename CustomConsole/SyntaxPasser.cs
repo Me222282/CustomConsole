@@ -16,9 +16,11 @@ namespace CustomConsole
             {
                 // Null is Void
                 if (_possibleSyntaxes[i].ReturnType == null &&
-                    (returnType != null || returnType != VarType.Any)) { continue; }
+                    returnType != null &&
+                    returnType != VarType.Any) { continue; }
                 // Doesn't return correct type
-                if (!_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
+                if (_possibleSyntaxes[i].ReturnType == null &&
+                    !_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
 
                 bool could = _possibleSyntaxes[i].ValidSyntax(syntax);
 
@@ -88,9 +90,11 @@ namespace CustomConsole
 
                 // Null is Void
                 if (_possibleSyntaxes[i].ReturnType == null &&
-                    (returnType != null || returnType != VarType.Any)) { continue; }
+                    returnType != null &&
+                    returnType != VarType.Any) { continue; }
                 // Doesn't return correct type
-                if (!_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
+                if (_possibleSyntaxes[i].ReturnType == null &&
+                    !_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
 
                 Executable e = _possibleSyntaxes[i].CorrectSyntax(syntax, returnType, this, out nextIndex, fill);
 
@@ -169,6 +173,7 @@ namespace CustomConsole
 
         public static List<ISyntax> Syntaxes { get; }
         public static List<Variable> Variables { get; } = new List<Variable>();
+        public static List<Function> Functions { get; } = new List<Function>();
 
         static SyntaxPasser()
         {
@@ -181,6 +186,7 @@ namespace CustomConsole
                 new CharSyntax(),
                 new BoolSyntax(),
                 new GetVariableSyntax(),
+                new FunctionSyntax(),
                 new SetVariableSyntax(),
                 new CreateVariableSyntax(),
                 new RemoveVariableSyntax(),

@@ -20,19 +20,16 @@ namespace CustomConsole
             
             Core.Terminate();*/
 
-            int bean = 5;
-            SyntaxPasser.Variables.Add(new Variable("bean", VarType.Int, () =>
+            SyntaxPasser.Variables.Add(new Variable("bean", VarType.Int, 5));
+            SyntaxPasser.Functions.Add(new Function("round", new IVarType[] { VarType.Double }, VarType.Double, objs =>
             {
-                return bean;
-            }, objs =>
-            {
-                bean = (int)objs;
+                return Math.Round((double)objs[0]);
             }));
 
             Stopwatch s = new Stopwatch();
             s.Start();
 
-            KeyWord[] kws = "5.3d + 5.2f + 2".FindKeyWords();
+            KeyWord[] kws = "round(5.3f) + 5.2d + bean".FindKeyWords();
 
             SyntaxPasser sp = new SyntaxPasser();
 

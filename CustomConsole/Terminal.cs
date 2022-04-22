@@ -77,7 +77,7 @@ namespace CustomConsole
 
         private static readonly List<string> _history = new List<string>(256);
         private static readonly List<string> _lines = new List<string>(256);
-        private static readonly List<Function> _functions = new List<Function>(256);
+        private static readonly List<FunctionOld> _functions = new List<FunctionOld>(256);
         private static readonly List<Variable> _variables;
 
         public static string Directory
@@ -297,7 +297,7 @@ namespace CustomConsole
                 return;
             }
 
-            Function f;
+            FunctionOld f;
             int paramIndex;
 
             try
@@ -357,7 +357,7 @@ namespace CustomConsole
                 };
             }
 
-            _functions.Add(new Function(name, paramConverters, callcack));
+            _functions.Add(new FunctionOld(name, paramConverters, callcack));
         }
         public static void AddVariable(string name, VariableType type, VariableGetter get, VariableSetter set)
         {
@@ -447,7 +447,7 @@ namespace CustomConsole
 
         public static List<string> Output => _lines;
 
-        private static Function FindFunction(string text, out int paramIndex)
+        private static FunctionOld FindFunction(string text, out int paramIndex)
         {
             StringBuilder name = new StringBuilder(32);
 
@@ -470,7 +470,7 @@ namespace CustomConsole
 
             string nameStr = name.ToString();
 
-            Function f = _functions.Find(f => f.Name == nameStr);
+            FunctionOld f = _functions.Find(f => f.Name == nameStr);
 
             if (f == null)
             {
