@@ -3,17 +3,11 @@ using System.Collections.Generic;
 
 namespace CustomConsole
 {
-    public struct FunctionCodeFormat : ICodeFormat
+    public class FunctionSyntax : ISyntax
     {
         private static readonly string[] _preChars = new string[] { ")", "(", ".", "," };
         private static readonly string[] _postChars = new string[] { ")", "(", "." };
 
-        public string[] NoPreSpaces => _preChars;
-        public string[] NoPostSpaces => _postChars;
-    }
-
-    public class FunctionSyntax : ISyntax
-    {
         public KeyWord[] Keywords { get; } = new KeyWord[]
         {
             new KeyWord(null, KeyWordType.Word),
@@ -22,7 +16,7 @@ namespace CustomConsole
         };
         public int InputCount => -1;
         public IVarType ReturnType => VarType.Any;
-        public ICodeFormat DisplayFormat => new FunctionCodeFormat();
+        public ICodeFormat DisplayFormat => new CodeFormat(_preChars, _postChars);
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {

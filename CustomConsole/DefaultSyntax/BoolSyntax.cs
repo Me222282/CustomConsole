@@ -7,7 +7,7 @@ namespace CustomConsole
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Word) };
         public int InputCount => 0;
         public IVarType ReturnType => VarType.Bool;
-        public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
+        public ICodeFormat DisplayFormat { get; } = new DefaultCodeFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {

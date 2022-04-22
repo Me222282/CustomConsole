@@ -4,10 +4,13 @@ namespace CustomConsole
 {
     public class DoubleSyntax : ISyntax
     {
+        private static readonly string[] _preChars = new string[] { ".", "d" };
+        private static readonly string[] _postChars = new string[] { "." };
+
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Number) };
         public int InputCount => 0;
         public IVarType ReturnType => VarType.Double;
-        public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
+        public ICodeFormat DisplayFormat { get; } = new CodeFormat(_preChars, _postChars);
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {

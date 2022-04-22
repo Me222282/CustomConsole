@@ -5,15 +5,6 @@ using System.Text;
 
 namespace CustomConsole
 {
-    public struct DefaultFormat : ICodeFormat
-    {
-        private static readonly string[] _preChars = new string[] { ")", "]", "}", "\"", "\'", ".", "," };
-        private static readonly string[] _postChars = new string[] { "(", "[", "{", "\"", "\'", "." };
-
-        public string[] NoPreSpaces => _preChars;
-        public string[] NoPostSpaces => _postChars;
-    }
-
     public static class Extensions
     {
         public static KeyWord[] FindKeyWords(this string code)
@@ -231,7 +222,7 @@ namespace CustomConsole
         {
             if (format == null)
             {
-                format = new DefaultFormat();
+                format = new DefaultCodeFormat();
             }
 
             StringBuilder str = new StringBuilder();

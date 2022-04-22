@@ -30,7 +30,7 @@ namespace CustomConsole
         public IVarType ReturnType { get; }
         public int InputCount { get; }
 
-        public ICodeFormat DisplayFormat { get; set; } = new DefaultFormat();
+        public ICodeFormat DisplayFormat { get; set; } = new DefaultCodeFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {

@@ -491,7 +491,9 @@ namespace CustomConsole
                     VarType.Vector2,
                     VarType.Vector3,
                     VarType.Vector4
-                }, VarType.NonVoid, (objs) =>
+                }, VarType.NonVoid,
+                new CodeFormat("-"),
+                (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -514,7 +516,9 @@ namespace CustomConsole
                     VarType.Int,
                     VarType.Double,
                     VarType.Float
-                }, VarType.NonVoid, (objs) =>
+                }, VarType.NonVoid,
+                new CodeFormat("|"),
+                (objs) =>
                 {
                     Console.WriteLine(objs[0].GetType());
 

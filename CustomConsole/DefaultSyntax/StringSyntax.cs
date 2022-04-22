@@ -4,6 +4,9 @@ namespace CustomConsole
 {
     public class StringSyntax : ISyntax
     {
+        private static readonly string[] _preChars = new string[] { "\"" };
+        private static readonly string[] _postChars = new string[] { "\"" };
+
         public KeyWord[] Keywords { get; } = new KeyWord[3]
         {
             new KeyWord("\"", KeyWordType.String),
@@ -12,7 +15,7 @@ namespace CustomConsole
         };
         public int InputCount => 0;
         public IVarType ReturnType => VarType.String;
-        public ICodeFormat DisplayFormat { get; } = new DefaultFormat();
+        public ICodeFormat DisplayFormat { get; } = new CodeFormat(_preChars, _postChars);
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {

@@ -76,7 +76,7 @@ namespace CustomConsole
         {
             get
             {
-                ICodeFormat format = Source.DisplayFormat ?? new DefaultFormat();
+                ICodeFormat format = Source.DisplayFormat ?? new DefaultCodeFormat();
 
                 StringBuilder str = new StringBuilder();
 
