@@ -260,53 +260,6 @@ namespace CustomConsole
 
             return str.ToString();
         }
-        public static string CreateCode(this Executable executable)
-        {
-            ICodeFormat format = executable.Source.DisplayFormat ?? new DefaultFormat();
-
-            StringBuilder str = new StringBuilder();
-
-            int inputCount = 0;
-
-            for (int i = 0; i < executable.Syntax.Length; i++)
-            {
-                string word = executable.Syntax[i].Word;
-
-                if (word == "")
-                {
-                    if (executable.SubExecutables.Length < inputCount + 1)
-                    {
-                        throw new Exception($"Insufficient {nameof(Executable)} data");
-                    }
-
-                    str.Append(CreateCode(executable.SubExecutables[inputCount]));
-                    inputCount++;
-                    continue;
-                }
-
-                str.Append(word);
-
-                // No spaces after specified format keywords
-                if (format.NoPostSpaces.Contains(word))
-                {
-                    continue;
-                }
-
-                // No spaces before specified format keywords
-                string nextWord = executable.Syntax[i + 1].Word;
-                if (format.NoPreSpaces.Contains(nextWord))
-                {
-                    continue;
-                }
-
-                // End of loop - break before adding final space
-                if (executable.Syntax.Length >= (i + 1)) { break; }
-
-                str.Append(' ');
-            }
-
-            return str.ToString();
-        }
 
         public static IVarType GetHigherType(this IVarType a, IVarType b)
         {

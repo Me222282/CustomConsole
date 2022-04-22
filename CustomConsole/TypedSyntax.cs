@@ -118,10 +118,8 @@ namespace CustomConsole
             // Reached end of this syntaxes keywords
             return wordIndex == Keywords.Length;
         }
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, object param)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, bool fill)
         {
-            bool fill = param is bool b && b;
-
             index = 0;
 
             if (code.Length == 0) { return null; }

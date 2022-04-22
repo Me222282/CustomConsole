@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Zene.Structs;
 
 namespace CustomConsole
@@ -70,6 +72,54 @@ namespace CustomConsole
                 return combinedWords.ToArray();
             }
         }
+        public string SourceCode
+        {
+            get
+            {
+                ICodeFormat format = Source.DisplayFormat ?? new DefaultFormat();
+
+                StringBuilder str = new StringBuilder();
+
+                int inputCount = 0;
+
+                for (int i = 0; i < Syntax.Length; i++)
+                {
+                    string word = Syntax[i].Word;
+
+                    if (word == "")
+                    {
+                        if (SubExecutables.Length < inputCount + 1)
+                        {
+                            throw new Exception($"Insufficient {nameof(Executable)} data");
+                        }
+
+                        str.Append(SubExecutables[inputCount].SourceCode);
+                        inputCount++;
+                    }
+                    else
+                    {
+                        str.Append(word);
+                    }
+
+                    // End of loop - break before adding final space
+                    if (Syntax.Length == (i + 1)) { break; }
+
+                    // No spaces after specified format keywords
+                    if (format.NoPostSpaces.Contains(word)) { continue; }
+
+                    // No spaces before specified format keywords
+                    string nextWord = Syntax[i + 1].Word;
+                    if (format.NoPreSpaces.Contains(nextWord)) { continue; }
+
+                    // End of string is already a space
+                    if (str[^1] == ' ') { continue; }
+
+                    str.Append(' ');
+                }
+
+                return str.ToString();
+            }
+        }
 
         public ExecuteHandle Function { get; }
 
@@ -77,14 +127,13 @@ namespace CustomConsole
         {
             object[] @params = new object[SubExecutables.Length];
 
-            if (SubExecutables.Length != _inputTypes.Length)
-            {
-                throw new Exception($"Insufficient {nameof(Executable)} data");
-            }
-
             for (int i = 0; i < @params.Length; i++)
             {
                 @params[i] = SubExecutables[i].Execute();
+
+                if (_inputTypes.Length < (i + 1)) { continue; }
+
+                Console.WriteLine($"{this}, param {i} is type {@params[i].GetType()}");
 
                 if (@params[i] is int @int)
                 {
@@ -125,6 +174,11 @@ namespace CustomConsole
             }
 
             return Function(@params);
+        }
+
+        public override string ToString()
+        {
+            return $"Executable: \"{SourceCode}\"";
         }
 
         private static IVarType[] GetInputTypes(KeyWord[] syntax)

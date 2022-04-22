@@ -21,15 +21,22 @@ namespace CustomConsole
             Core.Terminate();*/
 
             SyntaxPasser.Variables.Add(new Variable("bean", VarType.Int, 5));
-            SyntaxPasser.Functions.Add(new Function("round", new IVarType[] { VarType.Double }, VarType.Double, objs =>
+            SyntaxPasser.Functions.Add(new Function(new string[] { "Maths", "Round" }, new IVarType[] { VarType.Double }, VarType.Double, objs =>
             {
                 return Math.Round((double)objs[0]);
+            }));
+
+            SyntaxPasser.Functions.Add(new Function(new string[] { "dumb" }, new IVarType[] { VarType.Void }, VarType.Void, objs =>
+            {
+                Console.WriteLine($"This is dumb {SyntaxPasser.Variables[0].Getter()}");
+                return null;
             }));
 
             Stopwatch s = new Stopwatch();
             s.Start();
 
-            KeyWord[] kws = "round(5.3f) + 5.2d + bean".FindKeyWords();
+            //KeyWord[] kws = "Maths.Round(5.3f) + 5.2d + bean".FindKeyWords();
+            KeyWord[] kws = "|-2| | 4".FindKeyWords();
 
             SyntaxPasser sp = new SyntaxPasser();
 
@@ -47,6 +54,8 @@ namespace CustomConsole
             s.Stop();
             //Console.WriteLine(s.ElapsedMilliseconds);
 
+            //Console.WriteLine(e.Execute());
+
             try
             {
                 Console.WriteLine(e.Execute());
@@ -57,6 +66,7 @@ namespace CustomConsole
                 Console.ReadLine();
                 return;
             }
+            Console.WriteLine(e);
             Console.ReadLine();
         }
         

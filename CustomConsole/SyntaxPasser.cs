@@ -19,7 +19,7 @@ namespace CustomConsole
                     returnType != null &&
                     returnType != VarType.Any) { continue; }
                 // Doesn't return correct type
-                if (_possibleSyntaxes[i].ReturnType == null &&
+                if (_possibleSyntaxes[i].ReturnType != null &&
                     !_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
 
                 bool could = _possibleSyntaxes[i].ValidSyntax(syntax);
@@ -93,7 +93,7 @@ namespace CustomConsole
                     returnType != null &&
                     returnType != VarType.Any) { continue; }
                 // Doesn't return correct type
-                if (_possibleSyntaxes[i].ReturnType == null &&
+                if (_possibleSyntaxes[i].ReturnType != null &&
                     !_possibleSyntaxes[i].ReturnType.Compatible(returnType)) { continue; }
 
                 Executable e = _possibleSyntaxes[i].CorrectSyntax(syntax, returnType, this, out nextIndex, fill);
@@ -173,10 +173,26 @@ namespace CustomConsole
 
         public static List<ISyntax> Syntaxes { get; }
         public static List<Variable> Variables { get; } = new List<Variable>();
-        public static List<Function> Functions { get; } = new List<Function>();
+        public static List<Function> Functions { get; }
 
         static SyntaxPasser()
         {
+            Functions = new List<Function>()
+            {
+                new Function(new string[] { "memory", "Free" }, new IVarType[] { VarType.Variable }, VarType.Void, objs =>
+                {
+                    Variable var = (Variable)objs[0];
+
+                    if (!Variables.Exists(v => v.Name == var.Name))
+                    {
+                        throw new Exception($"No variable with name {var.Name} could be removed");
+                    }
+
+                    Variables.Remove(var);
+                    return null;
+                })
+            };
+
             Syntaxes = new List<ISyntax>()
             {
                 new IntegerSyntax(),
@@ -189,7 +205,7 @@ namespace CustomConsole
                 new FunctionSyntax(),
                 new SetVariableSyntax(),
                 new CreateVariableSyntax(),
-                new RemoveVariableSyntax(),
+                //new RemoveVariableSyntax(),
 
                 // Vector2
                 new Syntax(new KeyWord[]
@@ -262,6 +278,8 @@ namespace CustomConsole
                     VarType.Int,
                 }, VarType.NonVoid, (objs) =>
                 {
+                    Console.WriteLine(objs[0].GetType());
+
                     return objs[0] switch
                     {
                         int => (int)objs[0] | (int)objs[1],
@@ -498,13 +516,40 @@ namespace CustomConsole
                     VarType.Float
                 }, VarType.NonVoid, (objs) =>
                 {
-                    return objs[0] switch
+                    Console.WriteLine(objs[0].GetType());
+
+                    
+                    object o = objs[0] switch
                     {
-                        int => Math.Abs((int)objs[0]),
                         double => Math.Abs((double)objs[0]),
                         float => Math.Abs((float)objs[0]),
+                        int => Math.Abs((int)objs[0]),
                         _ => throw new BigException()
                     };
+                    /*
+                    object o;
+                    switch (objs[0])
+                    {
+                        case int:
+                            o = Math.Abs((int)objs[0]);
+                            Console.WriteLine("Cool");
+                            break;
+
+                        case float:
+                            o = Math.Abs((float)objs[0]);
+                            break;
+
+                        case double:
+                            o = Math.Abs((double)objs[0]);
+                            Console.WriteLine("STUPID MICROSOFT CANNOT DO ANYTHING");
+                            break;
+
+                        default:
+                            throw new BigException();
+                    }*/
+
+                    Console.WriteLine(o.GetType());
+                    return o;
                 }),
             };
         }

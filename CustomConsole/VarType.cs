@@ -43,8 +43,8 @@ namespace CustomConsole
 
         public static VarType Void { get; } = null;
 
-        public static IVarType NonVoid { get; } = new AnyType(false);
-        public static IVarType Any { get; } = new AnyType(true);
+        public static AnyType NonVoid { get; } = new AnyType(false);
+        public static AnyType Any { get; } = new AnyType(true);
 
         public static VarType Double { get; } = new VarType(null);
         public static VarType Float { get; } = new VarType(new IVarType[] { Double });
@@ -59,7 +59,10 @@ namespace CustomConsole
         public static VarType Vector3 { get; } = new VarType(new IVarType[] { Vector2 });
         public static VarType Vector4 { get; } = new VarType(new IVarType[] { Vector3, Vector2 });
 
-        private class AnyType : IVarType
+        public static VarType Type { get; } = new VarType(null);
+        public static VarType Variable { get; } = new VarType(null);
+
+        public class AnyType : IVarType
         {
             public AnyType(bool @void)
             {

@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 namespace CustomConsole
 {
+    public struct FunctionCodeFormat : ICodeFormat
+    {
+        private static readonly string[] _preChars = new string[] { ")", "(", ".", "," };
+        private static readonly string[] _postChars = new string[] { ")", "(", "." };
+
+        public string[] NoPreSpaces => _preChars;
+        public string[] NoPostSpaces => _postChars;
+    }
+
     public class FunctionSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[]
@@ -13,7 +22,7 @@ namespace CustomConsole
         };
         public int InputCount => -1;
         public IVarType ReturnType => VarType.Any;
-        public ICodeFormat DisplayFormat => new DefaultFormat();
+        public ICodeFormat DisplayFormat => new FunctionCodeFormat();
 
         public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
         {
@@ -60,7 +69,7 @@ namespace CustomConsole
         }
         public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => true;
 
-        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, object param = null)
+        public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, out int index, bool fill)
         {
             index = 0;
 
@@ -134,12 +143,12 @@ namespace CustomConsole
             List<KeyWord> kws = new List<KeyWord>(index);
 
             // Add name
-            for (int i = 0; i < path.Length; i++)
+            for (int i = 0; i < pathLength; i++)
             {
                 kws.Add(new KeyWord(path[i], KeyWordType.Word));
 
                 // Last index
-                if (path.Length == (i + 1)) { break; }
+                if (pathLength == (i + 1)) { break; }
 
                 kws.Add(new KeyWord(".", KeyWordType.Special));
             }
@@ -151,7 +160,7 @@ namespace CustomConsole
                 kws.Add(new KeyWord(func.Parameters[i]));
 
                 // Last index
-                if (path.Length == (i + 1)) { break; }
+                if (func.Parameters.Length == (i + 1)) { break; }
 
                 kws.Add(new KeyWord(",", KeyWordType.Special));
             }
@@ -161,7 +170,7 @@ namespace CustomConsole
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
-            return CorrectSyntax(code, type, source, out _);
+            return CorrectSyntax(code, type, source, out _, true);
         }
 
         private static bool FuncExists(string[] path, int length)
