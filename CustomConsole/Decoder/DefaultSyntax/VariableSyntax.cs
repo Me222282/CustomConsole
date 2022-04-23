@@ -218,7 +218,7 @@ namespace CustomConsole
                 Extensions.PassToType(ref objs[1], type);
 
                 SyntaxPasser.Variables.Add(new Variable(name, type, objs[1]));
-                return objs[0];
+                return objs[1];
             }, VarType.Void);
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)

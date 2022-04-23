@@ -29,5 +29,7 @@
 
         public VariableGetter Getter { get; set; }
         public VariableSetter Setter { get; set; }
+
+        public override string ToString() => $"Variable:{{{_value}}}";
     }
 }

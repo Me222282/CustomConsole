@@ -31,8 +31,6 @@ namespace CustomConsole
             _texture.SetData(w, h, BaseFormat.Rgba, texData);
         }
 
-        //public override string Name => "FontC";
-
         public override double CharSpace { get; set; } = 0.2;
         public override double LineSpace { get; set; } = 0.25;
 

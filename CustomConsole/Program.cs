@@ -156,7 +156,10 @@ namespace CustomConsole
             {
                 AutoIncreaseCapacity = true
             };
+
             _fontC = new FontC();
+            _fontC2 = new FontC2();
+            _usingFont = _fontC;
 
             // Opacity
             State.Blending = true;
@@ -167,14 +170,16 @@ namespace CustomConsole
 
         public override TextureRenderer Framebuffer { get; }
         private readonly TextRenderer _textRender;
+        private Font _usingFont;
         private readonly Font _fontC;
+        private readonly Font _fontC2;
 
         private readonly StringBuilder _enterText = new StringBuilder(16);
 
         private double _margin = 5;
         private double _charSize = 15;
 
-        private const char _caretChar = '|';
+        private static char _caretChar = '|';
         private static char Caret
         {
             get
@@ -204,13 +209,7 @@ namespace CustomConsole
             // Update draw when output to console
             Terminal.OnLog += (_, _) => _update = true;
 
-            Terminal.AddVariable("margin", VarType.Double, () =>
-            {
-                return _margin;
-            }, obj =>
-            {
-                _margin = (double)obj;
-            });
+            AddVariables();
 
             Matrix4 originOffset = Matrix4.Identity;
 
@@ -234,11 +233,11 @@ namespace CustomConsole
                 _textRender.Model = originOffset;
 
                 ReadOnlySpan<char> enterText = Terminal.Name + "> " + _enterText.ToString();
-                _textRender.DrawLeftBound(enterText, _fontC);
+                _textRender.DrawLeftBound(enterText, _usingFont);
 
                 SetCaretOffset(enterText);
 
-                _textRender.DrawLeftBound(Caret.ToString(), _fontC);
+                _textRender.DrawLeftBound(Caret.ToString(), _usingFont);
 
                 if (Title != Terminal.Directory)
                 {
@@ -265,7 +264,7 @@ namespace CustomConsole
             {
                 ReadOnlySpan<char> text = Terminal.Output[i];
 
-                double location = corner.Y + (_viewOffset + lineOffset - _fontC.LineHeight);
+                double location = corner.Y + (_viewOffset + lineOffset - _usingFont.LineHeight);
                 // Above view
                 if (location > corner.Y) { goto NextChar; }
                 // Below view
@@ -274,10 +273,10 @@ namespace CustomConsole
                 _textRender.Model = scaleM *
                     Matrix4.CreateTranslation(corner.X, corner.Y + lineOffset, 0d);
 
-                _textRender.DrawLeftBound(text, _fontC);
+                _textRender.DrawLeftBound(text, _usingFont);
 
             NextChar:
-                double lineHeight = (_fontC.GetLineHeight(text) + _fontC.LineSpace) * -_charSize;
+                double lineHeight = (_usingFont.GetLineHeight(text) + _usingFont.LineSpace) * -_charSize;
                 lineOffset += lineHeight;
             }
 
@@ -295,14 +294,14 @@ namespace CustomConsole
             }
 
             // The width of the caret
-            double caretSize = _fontC.GetCharacterData(_caretChar).Size.X;
+            double caretSize = _usingFont.GetCharacterData(_caretChar).Size.X;
 
-            CharFontData cfd = _fontC.GetCharacterData(offsetCount[^1]);
+            CharFontData cfd = _usingFont.GetCharacterData(offsetCount[^1]);
             // Gets the space between the edit character and the next character - in character space
-            double charSpace = cfd.Buffer + cfd.ExtraOffset.X + _fontC.CharSpace;
+            double charSpace = cfd.Buffer + cfd.ExtraOffset.X + _usingFont.CharSpace;
 
             // Gets the offset for the caret in character space - centers the caret bewteen the two neighbouring characters
-            double lineSpace = _fontC.GetLineWidth(offsetCount, _fontC.CharSpace, 4) + (charSpace * 0.5) - (caretSize * 0.5);
+            double lineSpace = _usingFont.GetLineWidth(offsetCount, _usingFont.CharSpace, 4) + (charSpace * 0.5) - (caretSize * 0.5);
             // Creates a matrix to offset by "lineSpace" space but converted to pixel space
             _textRender.Model *= Matrix4.CreateTranslation(lineSpace * _charSize, 0d, 0d);
         }
@@ -402,7 +401,7 @@ namespace CustomConsole
             base.OnTextInput(e);
 
             // Invalid character
-            if (!e[' '] && !_fontC.GetCharacterData(e.Character).Supported) { return; }
+            if (!e[' '] && !_usingFont.GetCharacterData(e.Character).Supported) { return; }
 
             // Reset caret timer
             GLFW.SetTime(0);
@@ -421,7 +420,7 @@ namespace CustomConsole
             if (!_ctrl)
             {
                 double absDelta = Math.Abs(e.DeltaY * 3);
-                double offset = ((absDelta * _fontC.LineHeight) + (_fontC.LineSpace * absDelta)) * _charSize;
+                double offset = ((absDelta * _usingFont.LineHeight) + (_usingFont.LineSpace * absDelta)) * _charSize;
 
                 if (e.DeltaY < 0) { offset = -offset; }
                 _viewOffset -= offset;
@@ -437,6 +436,59 @@ namespace CustomConsole
 
             if (_charSize < 2) { _charSize = 2; }
             else if (_charSize > 100) { _charSize = 100; }
+        }
+
+        private bool _monoSpace = true;
+        private void AddVariables()
+        {
+            Terminal.AddVariable("margin", VarType.Double, () =>
+            {
+                return _margin;
+            }, obj =>
+            {
+                _margin = (double)obj;
+            });
+
+            Terminal.AddVariable("monospace", VarType.Bool, () =>
+            {
+                return _monoSpace;
+            }, obj =>
+            {
+                _monoSpace = (bool)obj;
+
+                if (_monoSpace)
+                {
+                    _usingFont = _fontC;
+                    return;
+                }
+
+                _usingFont = _fontC2;
+            });
+
+            Terminal.AddVariable("charspace", VarType.Double, () =>
+            {
+                return _usingFont.CharSpace;
+            }, obj =>
+            {
+                _fontC.CharSpace = (double)obj;
+                _fontC2.CharSpace = (double)obj;
+            });
+            Terminal.AddVariable("linespace", VarType.Double, () =>
+            {
+                return _usingFont.LineSpace;
+            }, obj =>
+            {
+                _fontC.LineSpace = (double)obj;
+                _fontC2.LineSpace = (double)obj;
+            });
+
+            Terminal.AddVariable("caret", VarType.Char, () =>
+            {
+                return _caretChar;
+            }, obj =>
+            {
+                _caretChar = (char)obj;
+            });
         }
     }
 }

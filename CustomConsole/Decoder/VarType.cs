@@ -45,6 +45,7 @@ namespace CustomConsole
         bool IVarType.Equals(IVarType type) => Equals(type);
 
         public override int GetHashCode() => HashCode.Combine(Id, ImplicitTo);
+        public override string ToString() => $"Type:{{{Name}}}";
 
         public static VarType Void { get; } = null;
 
@@ -90,6 +91,7 @@ namespace CustomConsole
             bool IVarType.Equals(IVarType type) => Equals(type);
 
             public override int GetHashCode() => HashCode.Combine(IncludeVoid);
+            public override string ToString() => $"Type:{{{Name}}}";
         }
     }
 }

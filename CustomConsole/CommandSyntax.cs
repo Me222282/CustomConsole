@@ -26,6 +26,10 @@ namespace CustomConsole
             // No command could be found
             if (c == null) { return null; }
 
+            // Unknown syntax - not a command
+            if (c.Properties.Length == 0 &&
+                code.Length > 1) { return null; }
+
             Executable[] props = FindProperties(code[1..], new LastFind(code, this), source, c.Properties);
 
             // Invalid properties
@@ -93,6 +97,8 @@ namespace CustomConsole
                     }, true);
                     continue;
                 }
+
+                if (nonPrefix.Count == 0) { return null; }
 
                 Executable e = source.FindCorrectSyntax(syntax[i..], lastcall, nonPrefix[nonPreCount].Item1.DataType, new KeyWord(), false, out int addI);
 

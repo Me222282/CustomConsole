@@ -31,7 +31,7 @@ namespace CustomConsole
             _texture.SetData(w, h, BaseFormat.Rgba, texData);
         }
 
-        public override double CharSpace { get; set; } = 0.15;
+        public override double CharSpace { get; set; } = 0.2;
         public override double LineSpace { get; set; } = 0.25;
 
         private readonly Texture2D _texture;
