@@ -501,6 +501,8 @@ namespace CustomConsole
             _caretChar = '|';
             _textIndex = 0;
             _usingFont = _fontC;
+
+            AddVariables();
         }
     }
 }
