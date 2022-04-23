@@ -502,6 +502,11 @@ namespace CustomConsole
             _textIndex = 0;
             _usingFont = _fontC;
 
+            _fontC.CharSpace = 0.2;
+            _fontC2.CharSpace = 0.2;
+            _fontC.LineSpace = 0.25;
+            _fontC2.LineSpace = 0.25;
+
             AddVariables();
         }
     }
