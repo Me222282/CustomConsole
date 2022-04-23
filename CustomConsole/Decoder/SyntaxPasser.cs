@@ -181,6 +181,13 @@ namespace CustomConsole
         public static List<Variable> Variables { get; } = new List<Variable>();
         public static List<Function> Functions { get; private set; }
 
+        private static readonly VarTypeGroup _iNumber = new VarTypeGroup(VarType.Int,
+            VarType.Double,
+            VarType.Float,
+            VarType.Vector2,
+            VarType.Vector3,
+            VarType.Vector4);
+
         public static void ResetSyntax()
         {
             Variables.Clear();
@@ -295,13 +302,13 @@ namespace CustomConsole
                 //
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("|", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[]
                 {
-                    VarType.Int,
-                }, VarType.NonVoid, (objs) =>
+                    new VarTypeGroup(VarType.Int)
+                }, TypedVar.T1, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -311,13 +318,13 @@ namespace CustomConsole
                 }),
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("&", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[]
                 {
-                    VarType.Int,
-                }, VarType.NonVoid, (objs) =>
+                    new VarTypeGroup(VarType.Int)
+                }, TypedVar.T1, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -327,14 +334,14 @@ namespace CustomConsole
                 }),
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord(">", KeyWordType.Special),
                     new KeyWord(">", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[]
                 {
-                    VarType.Int,
-                }, VarType.NonVoid, (objs) =>
+                    new VarTypeGroup(VarType.Int)
+                }, TypedVar.T1, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -344,14 +351,14 @@ namespace CustomConsole
                 }),
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("<", KeyWordType.Special),
                     new KeyWord("<", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[]
                 {
-                    VarType.Int,
-                }, VarType.NonVoid, (objs) =>
+                    new VarTypeGroup(VarType.Int)
+                }, TypedVar.T1, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -361,13 +368,13 @@ namespace CustomConsole
                 }),
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("^", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[]
                 {
-                    VarType.Int,
-                }, VarType.NonVoid, (objs) =>
+                    new VarTypeGroup(VarType.Int)
+                }, TypedVar.T1, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -381,18 +388,10 @@ namespace CustomConsole
                 //
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
-                {
-                    VarType.Int,
-                    VarType.Double,
-                    VarType.Float,
-                    VarType.Vector2,
-                    VarType.Vector3,
-                    VarType.Vector4
-                }, VarType.NonVoid, (objs) =>
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[] { _iNumber }, TypedVar.T1, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -407,32 +406,11 @@ namespace CustomConsole
                 }),
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("+", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[] { _iNumber }, TypedVar.T1, (objs) =>
                 {
-                    VarType.Int,
-                    VarType.Double,
-                    VarType.Float,
-                    VarType.String,
-                    VarType.Char,
-                    VarType.Vector2,
-                    VarType.Vector3,
-                    VarType.Vector4
-                }, VarType.NonVoid, (objs) =>
-                {
-                    /*
-                    return (VariableType)objs[^1] switch
-                    {
-                        VariableType.Int => (int)objs[0] + (int)objs[1],
-                        VariableType.Double => (double)objs[0] + (double)objs[1],
-                        VariableType.Float => (float)objs[0] + (float)objs[1],
-                        VariableType.Vector2 => (Vector2)objs[0] + (Vector2)objs[1],
-                        VariableType.Vector3 => (Vector3)objs[0] + (Vector3)objs[1],
-                        VariableType.Vector4 => (Vector4)objs[0] + (Vector4)objs[1],
-                    };*/
-
                     return objs[0] switch
                     {
                         int => (int)objs[0] + (int)objs[1],
@@ -448,18 +426,10 @@ namespace CustomConsole
                 }),
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("*", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
-                {
-                    VarType.Int,
-                    VarType.Double,
-                    VarType.Float,
-                    VarType.Vector2,
-                    VarType.Vector3,
-                    VarType.Vector4
-                }, VarType.NonVoid, (objs) =>
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[] { _iNumber }, TypedVar.T1, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -474,18 +444,10 @@ namespace CustomConsole
                 }),
                 new SyntaxTyped(new KeyWord[]
                 {
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("/", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
-                {
-                    VarType.Int,
-                    VarType.Double,
-                    VarType.Float,
-                    VarType.Vector2,
-                    VarType.Vector3,
-                    VarType.Vector4
-                }, VarType.NonVoid, (objs) =>
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[] { _iNumber }, TypedVar.T1, (objs) =>
                 {
                     return objs[0] switch
                     {
@@ -505,16 +467,8 @@ namespace CustomConsole
                 new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord("-", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid)
-                }, new IVarType[]
-                {
-                    VarType.Int,
-                    VarType.Double,
-                    VarType.Float,
-                    VarType.Vector2,
-                    VarType.Vector3,
-                    VarType.Vector4
-                }, VarType.NonVoid,
+                    new KeyWord(TypedVar.T1)
+                }, new VarTypeGroup[] { _iNumber }, TypedVar.T1,
                 new CodeFormat("-"),
                 (objs) =>
                 {
@@ -532,14 +486,15 @@ namespace CustomConsole
                 new SyntaxTyped(new KeyWord[]
                 {
                     new KeyWord("|", KeyWordType.Special),
-                    new KeyWord(VarType.NonVoid),
+                    new KeyWord(TypedVar.T1),
                     new KeyWord("|", KeyWordType.Special)
-                }, new IVarType[]
+                }, new VarTypeGroup[]
                 {
-                    VarType.Int,
-                    VarType.Double,
-                    VarType.Float
-                }, VarType.NonVoid,
+                    new VarTypeGroup(
+                        VarType.Int,
+                        VarType.Double,
+                        VarType.Float)
+                }, TypedVar.T1,
                 new CodeFormat("|"),
                 (objs) =>
                 {

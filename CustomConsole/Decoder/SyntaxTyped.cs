@@ -4,12 +4,25 @@ namespace CustomConsole
 {
     public sealed class SyntaxTyped : ISyntax
     {
-        public SyntaxTyped(KeyWord[] keywords, IVarType[] possibleTypes, IVarType returnType, ExecuteHandle handle)
+        public SyntaxTyped(KeyWord[] keywords, VarTypeGroup[] typeTs, IVarType returnType, ExecuteHandle handle)
         {
             Keywords = keywords;
-            PossibleTypes = possibleTypes;
+            UnknownTypes = typeTs ?? new VarTypeGroup[0];
             Handle = handle;
-            ReturnType = returnType;
+
+            if (returnType is TypedVar tv)
+            {
+                if (UnknownTypes.Length < tv.Id + 1)
+                {
+                    throw new Exception($"Unsupport {tv.Name}");
+                }
+
+                ReturnType = UnknownTypes[tv.Id];
+            }
+            else
+            {
+                ReturnType = returnType;
+            }
 
             InputCount = 0;
             for (int i = 0; i < keywords.Length; i++)
@@ -20,8 +33,8 @@ namespace CustomConsole
                 }
             }
         }
-        public SyntaxTyped(KeyWord[] keywords, IVarType[] possibleTypes, IVarType returnType, ICodeFormat codeFormat, ExecuteHandle handle)
-            : this(keywords, possibleTypes, returnType, handle)
+        public SyntaxTyped(KeyWord[] keywords, VarTypeGroup[] typeTs, IVarType returnType, ICodeFormat codeFormat, ExecuteHandle handle)
+            : this(keywords, typeTs, returnType, handle)
         {
             DisplayFormat = codeFormat;
         }
@@ -29,7 +42,7 @@ namespace CustomConsole
         public KeyWord[] Keywords { get; }
         public ExecuteHandle Handle { get; }
         public IVarType ReturnType { get; }
-        public IVarType[] PossibleTypes { get; }
+        public VarTypeGroup[] UnknownTypes { get; }
         public int InputCount { get; }
 
         public ICodeFormat DisplayFormat { get; set; } = new DefaultCodeFormat();
@@ -135,7 +148,8 @@ namespace CustomConsole
             Executable[] subExes = new Executable[InputCount];
 
             IVarType[] inputTypes = new IVarType[InputCount];
-            IVarType highestType = type;
+            IVarType[] highestType = new IVarType[UnknownTypes.Length];
+            Array.Fill(highestType, VarType.Any);
 
             for (int i = 0; i < Keywords.Length; i++)
             {
@@ -154,26 +168,37 @@ namespace CustomConsole
                             lastI + 1 > slice.Length ? lastI : (lastI + 1));
                     }
 
-                    Executable e = source.FindCorrectSyntax(slice, new LastFind(code, this), Keywords[i].InputType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
+                    IVarType expectedType = Keywords[i].InputType;
+                    if (Keywords[i].InputType is TypedVar tv1)
+                    {
+                        if (highestType.Length < tv1.Id + 1)
+                        {
+                            throw new Exception($"Unsupport {tv1.Name}");
+                        }
+
+                        expectedType = UnknownTypes[tv1.Id];
+                    }
+
+                    Executable e = source.FindCorrectSyntax(slice, new LastFind(code, this), expectedType, nextKW, fill && Keywords.Length == (i + 1), out int addIndex);
                     index += addIndex;
 
                     // No valid syntax to match input could be found
                     if (e == null) { return null; }
 
-                    if (Keywords[i].InputType == VarType.NonVoid)
+                    if (Keywords[i].InputType is TypedVar tv2)
                     {
                         // Type not accepted
-                        if (!ValidType(e.ReturnType)) { return null; }
+                        if (!ValidType(e.ReturnType, tv2.Id)) { return null; }
 
                         IVarType vart;
                         try
                         {
-                            vart = highestType.GetHigherType(e.ReturnType);
+                            vart = highestType[tv2.Id].GetHigherType(e.ReturnType);
                         }
                         // Type not accepted
                         catch (ConsoleException) { return null; }
 
-                        highestType = vart;
+                        highestType[tv2.Id] = vart;
                     }
 
                     inputTypes[inputIndex] = Keywords[i].InputType;
@@ -195,31 +220,34 @@ namespace CustomConsole
             for (int i = 0; i < kws.Length; i++)
             {
                 if (Keywords[i].Type == KeyWordType.Input &&
-                    Keywords[i].InputType == VarType.NonVoid)
+                    Keywords[i].InputType is TypedVar tv3)
                 {
-                    kws[i] = new KeyWord(highestType);
+                    if (highestType.Length < tv3.Id + 1)
+                    {
+                        throw new Exception($"Unsupport {tv3.Name}");
+                    }
+
+                    kws[i] = new KeyWord(highestType[tv3.Id]);
                     continue;
                 }
 
                 kws[i] = Keywords[i];
             }
 
-            return new Executable(this, kws, subExes, Handle,
-                ReturnType == VarType.NonVoid ? highestType : ReturnType);
-        }
-
-        private bool ValidType(IVarType type)
-        {
-            for (int i = 0; i < PossibleTypes.Length; i++)
+            IVarType returnType = ReturnType;
+            if (returnType is TypedVar tv4)
             {
-                if (type.Compatible(PossibleTypes[i]))
+                if (highestType.Length < tv4.Id + 1)
                 {
-                    return true;
+                    throw new Exception($"Unsupport {tv4.Name}");
                 }
-            }
 
-            return false;
+                returnType = highestType[tv4.Id];
+            }
+            return new Executable(this, kws, subExes, Handle, returnType);
         }
+
+        private bool ValidType(IVarType type, uint idT) => type.Compatible(UnknownTypes[idT]);
 
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {

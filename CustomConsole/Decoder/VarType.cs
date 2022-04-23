@@ -34,7 +34,7 @@ namespace CustomConsole
             if (type is AnyType) { return true; }
 
             // Equal types are compatible
-            if (Equals(type)) { return true; }
+            if (Equals(type) || type.Equals(this)) { return true; }
 
             // Can this Type be casted to "type" Type
             return ImplicitTo != null &&

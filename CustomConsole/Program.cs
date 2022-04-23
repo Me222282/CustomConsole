@@ -60,9 +60,9 @@ namespace CustomConsole
                 Console.WriteLine($"{objs[2]} works with {objs[0]} and {objs[1]}");
             }));
 
-            ExecuteFile("resources/zene.txt");
-            Console.ReadLine();
-            return;
+            //ExecuteFile("resources/zene.txt");
+            //Console.ReadLine();
+            //return;
 
             KeyWord[] kws = "Maths.Round(5.3f) + 5.2d + bean".FindKeyWords();
 
