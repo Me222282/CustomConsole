@@ -354,6 +354,11 @@ namespace CustomConsole
             {
                 throw new Exception($"{type.Name} cannot be null");
             }
+            if (type == VarType.Void && obj == null) { return; }
+            else if (obj == null)
+            {
+                throw new Exception($"Cannot cast object of type Void to {type.Name}");
+            }
 
             IVarType objType = obj.GetVarType();
 
