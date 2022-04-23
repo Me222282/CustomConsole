@@ -208,6 +208,8 @@ namespace CustomConsole
 
             // Update draw when output to console
             Terminal.OnLog += (_, _) => _update = true;
+            // Reset
+            Terminal.OnReset += (_, _) => Reset();
 
             AddVariables();
 
@@ -248,7 +250,6 @@ namespace CustomConsole
                 GLFW.PollEvents();
             }
         }
-        
         private void Draw()
         {
             Framebuffer.Clear(BufferBit.Colour);
@@ -489,6 +490,17 @@ namespace CustomConsole
             {
                 _caretChar = (char)obj;
             });
+        }
+
+        private void Reset()
+        {
+            _update = true;
+            _viewOffset = 0;
+            _margin = 5;
+            _charSize = 15;
+            _caretChar = '|';
+            _textIndex = 0;
+            _usingFont = _fontC;
         }
     }
 }

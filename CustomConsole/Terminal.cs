@@ -61,133 +61,12 @@ namespace CustomConsole
                 return CorrectSyntax(code, type, source, new KeyWord(), out _, true);
             }
         }
-
-        static Terminal()
-        {
-            SyntaxPasser.Syntaxes.Insert(0, new CommandSyntax());
-            SyntaxPasser.Syntaxes.Add(new CDSyntax());
-
-            SyntaxPasser.Variables.AddRange(new Variable[]
-            {
-                new Variable("name", VarType.String, () =>
-                {
-                    return Name;
-                }, obj =>
-                {
-                    Name = (string)obj;
-                }),
-
-                new Variable("dir", VarType.String, () =>
-                {
-                    return Directory;
-                }, obj =>
-                {
-                    string path = (string)obj;
-
-                    if (!System.IO.Directory.Exists(path))
-                    {
-                        throw new ConsoleException("Path could not be found");
-                    }
-
-                    Environment.CurrentDirectory = path;
-                }),
-
-                new Variable("user", VarType.String, () =>
-                {
-                    return Environment.UserName;
-                }, obj =>
-                {
-                    throw new ConsoleException("Variable cannot be set");
-                }),
-
-                new Variable("PATH", VarType.String, () =>
-                {
-                    return Environment.GetEnvironmentVariable("PATH");
-                }, obj =>
-                {
-                    Environment.SetEnvironmentVariable("PATH", (string)obj);
-                })
-            });
-
-            CommandSyntax.Commands.AddRange(new Command[]
-            {
-                new Command("clear", new CommandProperty[]
-                {
-                    new CommandProperty("c"),
-                    new CommandProperty("h")
-                }, objs =>
-                {
-                    bool c = (bool)objs[0];
-                    bool h = (bool)objs[1];
-
-                    if ((c && h)
-                        ||
-                        (!c && !h))
-                    {
-                        _lines.Clear();
-                        _history.Clear();
-                        return;
-                    }
-
-                    if (c)
-                    {
-                        _lines.Clear();
-                        return;
-                    }
-                    if (h)
-                    {
-                        _history.Clear();
-                        return;
-                    }
-                }),
-                new Command("close", null, objs =>
-                {
-                    Environment.Exit(0);
-                }),
-                new Command("hx", null, objs =>
-                {
-                    if (_history.Count == 0)
-                    {
-                        Log("No command history");
-                        return;
-                    }
-
-                    for (int i = 0; i < _history.Count; i++)
-                    {
-                        Log($"{i + 1}: {_history[i]}");
-                    }
-                }),
-                new Command("dir", null, objs =>
-                {
-                    Log(Directory);
-                })/*,
-                new Command("cd", new CommandProperty[] { new CommandProperty("directory", VarType.String) }, objs =>
-                {
-                    string path = (string)objs[0];
-
-                    //string pathFull = Path.Combine(Directory, path);
-                    string pathFull = Path.GetFullPath(path, Directory);
-
-                    if (System.IO.Directory.Exists(pathFull))
-                    {
-                        Directory = pathFull;
-                        return;
-                    }
-
-                    if (System.IO.Directory.Exists(path))
-                    {
-                        Directory = path;
-                        return;
-                    }
-
-                    Log("Path could not be found");
-                })*/
-            });
-        }
+        static Terminal() => AddCommandsVariablesSyntax();
 
         private static readonly List<string> _history = new List<string>(256);
         private static readonly List<string> _lines = new List<string>(256);
 
+        private static readonly string _originalDir = Environment.CurrentDirectory;
         public static string Directory
         {
             get => Environment.CurrentDirectory;
@@ -254,6 +133,7 @@ namespace CustomConsole
         }
 
         public static event EventHandler<string> OnLog;
+        public static event EventHandler OnReset;
 
         public static void AddFunction(string name, IVarType[] paramTypes, IVarType returnType, ExecuteHandle callcack)
         {
@@ -267,7 +147,7 @@ namespace CustomConsole
         {
             _lines.Add(value);
 
-            OnLog?.Invoke(null, value);
+            OnLog?.Invoke(new object(), value);
         }
         public static void NewLine()
         {
@@ -275,5 +155,124 @@ namespace CustomConsole
         }
 
         public static List<string> Output => _lines;
+
+        private static void Reset()
+        {
+            _name = Environment.UserName;
+            _history.Clear();
+            _lines.Clear();
+            
+            Environment.CurrentDirectory = _originalDir;
+
+            SyntaxPasser.ResetSyntax();
+            CommandSyntax.Commands.Clear();
+            AddCommandsVariablesSyntax();
+        }
+        private static void AddCommandsVariablesSyntax()
+        {
+            SyntaxPasser.Syntaxes.Insert(0, new CommandSyntax());
+            SyntaxPasser.Syntaxes.Add(new CDSyntax());
+
+            SyntaxPasser.Variables.AddRange(new Variable[]
+            {
+                new Variable("name", VarType.String, () =>
+                {
+                    return Name;
+                }, obj =>
+                {
+                    Name = (string)obj;
+                }),
+
+                new Variable("dir", VarType.String, () =>
+                {
+                    return Directory;
+                }, obj =>
+                {
+                    string path = (string)obj;
+
+                    if (!System.IO.Directory.Exists(path))
+                    {
+                        throw new ConsoleException("Path could not be found");
+                    }
+
+                    Environment.CurrentDirectory = path;
+                }),
+
+                new Variable("user", VarType.String, () =>
+                {
+                    return Environment.UserName;
+                }, obj =>
+                {
+                    throw new ConsoleException("Variable cannot be set");
+                }),
+
+                new Variable("PATH", VarType.String, () =>
+                {
+                    return Environment.GetEnvironmentVariable("PATH");
+                }, obj =>
+                {
+                    Environment.SetEnvironmentVariable("PATH", (string)obj);
+                })
+            });
+            CommandSyntax.Commands.AddRange(new Command[]
+            {
+                new Command("clear", new CommandProperty[]
+                {
+                    new CommandProperty("c"),
+                    new CommandProperty("h")
+                }, objs =>
+                {
+                    bool c = (bool)objs[0];
+                    bool h = (bool)objs[1];
+
+                    if ((c && h)
+                        ||
+                        (!c && !h))
+                    {
+                        _lines.Clear();
+                        _history.Clear();
+                        return;
+                    }
+
+                    if (c)
+                    {
+                        _lines.Clear();
+                        return;
+                    }
+                    if (h)
+                    {
+                        _history.Clear();
+                        return;
+                    }
+                }),
+                new Command("close", null, objs =>
+                {
+                    Environment.Exit(0);
+                }),
+                new Command("hx", null, objs =>
+                {
+                    if (_history.Count == 0)
+                    {
+                        Log("No command history");
+                        return;
+                    }
+
+                    for (int i = 0; i < _history.Count; i++)
+                    {
+                        Log($"{i + 1}: {_history[i]}");
+                    }
+                }),
+                new Command("dir", null, _ =>
+                {
+                    Log(Directory);
+                }),
+                new Command("reset", null, _ =>
+                {
+                    Reset();
+
+                    OnReset?.Invoke(new object(), new EventArgs());
+                })
+            });
+        }
     }
 }

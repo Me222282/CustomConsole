@@ -177,12 +177,14 @@ namespace CustomConsole
             return syntax.Length;
         }
 
-        public static List<ISyntax> Syntaxes { get; }
+        public static List<ISyntax> Syntaxes { get; private set; }
         public static List<Variable> Variables { get; } = new List<Variable>();
-        public static List<Function> Functions { get; }
+        public static List<Function> Functions { get; private set; }
 
-        static SyntaxPasser()
+        public static void ResetSyntax()
         {
+            Variables.Clear();
+
             Functions = new List<Function>()
             {
                 new Function(new string[] { "memory", "Free" }, new IVarType[] { VarType.Variable }, VarType.Void, objs =>
@@ -575,5 +577,6 @@ namespace CustomConsole
                 }),
             };
         }
+        static SyntaxPasser() => ResetSyntax();
     }
 }
