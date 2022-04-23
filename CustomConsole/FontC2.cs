@@ -603,6 +603,8 @@ namespace CustomConsole
                 if (character == '©') { return _copywriteChar; }
                 if (character == '®') { return _registeredChar; }
                 if (character == '™') { return _trademarkChar; }
+                // Control codes and space - have no drawable character data
+                if (character <= 32) { return CharFontData.Unsupported; }
 
                 return _unknownChar;
             }

@@ -635,6 +635,8 @@ namespace CustomConsole
 
                     return c;
                 }
+                // Control codes and space - have no drawable character data
+                if (character <= 32) { return CharFontData.Unsupported; }
 
                 CharFontData u = _unknownChar;
 

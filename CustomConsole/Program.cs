@@ -174,6 +174,7 @@ namespace CustomConsole
         private double _margin = 5;
         private double _charSize = 15;
 
+        private const char _caretChar = '|';
         private static char Caret
         {
             get
@@ -183,7 +184,7 @@ namespace CustomConsole
                 // Flash caret
                 if (((int)Math.Floor(GLFW.GetTime() * 2) % 2) == 0)
                 {
-                    caret = '_';
+                    caret = _caretChar;
                 }
 
                 return caret;
@@ -203,33 +204,12 @@ namespace CustomConsole
             // Update draw when output to console
             Terminal.OnLog += (_, _) => _update = true;
 
-            Terminal.AddFunction("Copy", new IVarType[] { VarType.String, VarType.Int }, VarType.String, objs =>
-            {
-                string text = (string)objs[0];
-                int count = (int)objs[1];
-
-                for (int i = 0; i < count; i++)
-                {
-                    Terminal.Log(text);
-                }
-
-                return null;
-            });
             Terminal.AddVariable("margin", VarType.Double, () =>
             {
                 return _margin;
             }, obj =>
             {
                 _margin = (double)obj;
-            });
-
-            Vector3 v = Vector3.One;
-            Terminal.AddVariable("v", VarType.Vector3, () =>
-            {
-                return v;
-            }, obj =>
-            {
-                v = (Vector3)obj;
             });
 
             Matrix4 originOffset = Matrix4.Identity;
@@ -258,7 +238,7 @@ namespace CustomConsole
 
                 SetCaretOffset(enterText);
 
-                _textRender.DrawLeftBound($"{Caret}", _fontC);
+                _textRender.DrawLeftBound(Caret.ToString(), _fontC);
 
                 if (Title != Terminal.Directory)
                 {
@@ -307,16 +287,24 @@ namespace CustomConsole
 
         private unsafe void SetCaretOffset(ReadOnlySpan<char> enterText)
         {
+            // A span of all the characters prefixing the caret
             ReadOnlySpan<char> offsetCount;
-
             fixed (char* c = &enterText[0])
             {
                 offsetCount = new ReadOnlySpan<char>(c, Terminal.Name.Length + 2 + _textIndex);
             }
 
-            double charSpace = _fontC.GetCharacterData(offsetCount[^1]).Buffer + _fontC.CharSpace;
-            double caretOffset = (_fontC.GetLineWidth(offsetCount, _fontC.CharSpace, 4) + charSpace) * _charSize;
-            _textRender.Model *= Matrix4.CreateTranslation(caretOffset, 0d, 0d);
+            // The width of the caret
+            double caretSize = _fontC.GetCharacterData(_caretChar).Size.X;
+
+            CharFontData cfd = _fontC.GetCharacterData(offsetCount[^1]);
+            // Gets the space between the edit character and the next character - in character space
+            double charSpace = cfd.Buffer + cfd.ExtraOffset.X + _fontC.CharSpace;
+
+            // Gets the offset for the caret in character space - centers the caret bewteen the two neighbouring characters
+            double lineSpace = _fontC.GetLineWidth(offsetCount, _fontC.CharSpace, 4) + (charSpace * 0.5) - (caretSize * 0.5);
+            // Creates a matrix to offset by "lineSpace" space but converted to pixel space
+            _textRender.Model *= Matrix4.CreateTranslation(lineSpace * _charSize, 0d, 0d);
         }
 
         protected override void OnSizePixelChange(SizeChangeEventArgs e)
@@ -349,6 +337,8 @@ namespace CustomConsole
             if (e[Keys.Left])
             {
                 _textIndex--;
+                // Reset caret timer
+                GLFW.SetTime(0);
 
                 if (_textIndex < 0)
                 {
@@ -358,6 +348,8 @@ namespace CustomConsole
             if (e[Keys.Right])
             {
                 _textIndex++;
+                // Reset caret timer
+                GLFW.SetTime(0);
 
                 if (_textIndex > _enterText.Length)
                 {
@@ -368,6 +360,8 @@ namespace CustomConsole
             if (e[Keys.BackSpace] && _enterText.Length > 0)
             {
                 _textIndex--;
+                // Reset caret timer
+                GLFW.SetTime(0);
                 if (_textIndex < 0)
                 {
                     _textIndex = 0;
@@ -409,6 +403,9 @@ namespace CustomConsole
 
             // Invalid character
             if (!e[' '] && !_fontC.GetCharacterData(e.Character).Supported) { return; }
+
+            // Reset caret timer
+            GLFW.SetTime(0);
 
             //_enterText.Append(e.Character);
             _enterText.Insert(_textIndex, e.Character);
