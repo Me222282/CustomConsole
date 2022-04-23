@@ -50,9 +50,14 @@ namespace CustomConsole
             SyntaxPasser.Variables.Add(new Variable("null", VarType.NonVoid, () => null, _ => throw new Exception("Cannot set null")));
 
             //SyntaxPasser.Syntaxes.Insert(0, new CommandSyntax());
-            CommandSyntax.Commands.Add(new Command("test", new char[] { 'c', 't' }, objs =>
+            CommandSyntax.Commands.Add(new Command("test", new CommandProperty[]
             {
-                Console.WriteLine($"It works with {objs[0]} and {objs[1]}");
+                new CommandProperty("t"),
+                new CommandProperty("c"),
+                new CommandProperty("str", VarType.String)
+            }, objs =>
+            {
+                Console.WriteLine($"{objs[2]} works with {objs[0]} and {objs[1]}");
             }));
 
             ExecuteFile("resources/zene.txt");

@@ -1,13 +1,71 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace CustomConsole
 {
     public static class Terminal
     {
+        private class CDSyntax : ISyntax
+        {
+            public KeyWord[] Keywords { get; } = new KeyWord[] { new KeyWord("cd", KeyWordType.Word) };
+            public int InputCount => 0;
+            public IVarType ReturnType => VarType.Void;
+            public ICodeFormat DisplayFormat => new DefaultCodeFormat();
+
+            public bool ValidSyntax(ReadOnlySpan<KeyWord> code) => code[0].Word == "cd";
+            public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => code[0].Word == "cd";
+
+            public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
+            {
+                index = code.Length;
+
+                if (!fill || code[0].Word != "cd") { return null; }
+
+                StringBuilder text = new StringBuilder();
+
+                for (int i = 1; i < code.Length; i++)
+                {
+                    if (code[i].Word == "\"") { continue; }
+
+                    text.Append(code[i].Word);
+                }
+
+                string path = text.ToString();
+                return new Executable(this, code.ToArray(), null, _ =>
+                {
+                    //string pathFull = Path.Combine(Directory, path);
+                    string pathFull = Path.GetFullPath(path, Directory);
+
+                    if (System.IO.Directory.Exists(pathFull))
+                    {
+                        Directory = pathFull;
+                        return null;
+                    }
+
+                    if (System.IO.Directory.Exists(path))
+                    {
+                        Directory = path;
+                        return null;
+                    }
+
+                    Log("Path could not be found");
+
+                    return null;
+                }, VarType.Void);
+            }
+
+            public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
+            {
+                return CorrectSyntax(code, type, source, new KeyWord(), out _, true);
+            }
+        }
+
         static Terminal()
         {
             SyntaxPasser.Syntaxes.Insert(0, new CommandSyntax());
+            SyntaxPasser.Syntaxes.Add(new CDSyntax());
 
             SyntaxPasser.Variables.AddRange(new Variable[]
             {
@@ -53,7 +111,11 @@ namespace CustomConsole
 
             CommandSyntax.Commands.AddRange(new Command[]
             {
-                new Command("clear", new char[] { 'c', 'h' }, objs =>
+                new Command("clear", new CommandProperty[]
+                {
+                    new CommandProperty("c"),
+                    new CommandProperty("h")
+                }, objs =>
                 {
                     bool c = (bool)objs[0];
                     bool h = (bool)objs[1];
@@ -98,7 +160,28 @@ namespace CustomConsole
                 new Command("dir", null, objs =>
                 {
                     Log(Directory);
-                }),
+                })/*,
+                new Command("cd", new CommandProperty[] { new CommandProperty("directory", VarType.String) }, objs =>
+                {
+                    string path = (string)objs[0];
+
+                    //string pathFull = Path.Combine(Directory, path);
+                    string pathFull = Path.GetFullPath(path, Directory);
+
+                    if (System.IO.Directory.Exists(pathFull))
+                    {
+                        Directory = pathFull;
+                        return;
+                    }
+
+                    if (System.IO.Directory.Exists(path))
+                    {
+                        Directory = path;
+                        return;
+                    }
+
+                    Log("Path could not be found");
+                })*/
             });
         }
 

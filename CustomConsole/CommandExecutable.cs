@@ -2,17 +2,19 @@
 {
     public class CommandExecutable : Executable
     {
-        public CommandExecutable(ISyntax src, KeyWord[] syntax, object[] properties, ExecuteHandle handle)
-            : base(src, syntax, null, handle, VarType.Void)
+        public CommandExecutable(ISyntax src, KeyWord[] syntax, Executable[] properties, CommandHandler handle)
+            : base(src, syntax, properties, objs => { handle(objs); return null; }, VarType.Void)
         {
-            Paramerters = properties ?? new object[0];
+            
         }
+    }
 
-        public object[] Paramerters { get; }
-
-        public override object Execute()
+    public class BooleanExecutable : Executable
+    {
+        public BooleanExecutable(ISyntax src, KeyWord[] syntax, bool value)
+            : base(src, syntax, null, _ => value, VarType.Bool)
         {
-            return Function(Paramerters);
+
         }
     }
 }

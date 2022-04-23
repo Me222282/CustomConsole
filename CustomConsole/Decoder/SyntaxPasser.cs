@@ -126,7 +126,7 @@ namespace CustomConsole
 
             return null;
         }
-        private Executable ManageBrackets(ReadOnlySpan<KeyWord> syntax, IVarType returnType, KeyWord nextWord, bool fill, out int nextIndex)
+        public Executable ManageBrackets(ReadOnlySpan<KeyWord> syntax, IVarType returnType, KeyWord nextWord, bool fill, out int nextIndex)
         {
             int end = FindClosingBracket(syntax, 0);
 

@@ -12,89 +12,34 @@ namespace CustomConsole
         public IVarType ReturnType => VarType.Void;
         public ICodeFormat DisplayFormat { get; } = new CodeFormat(null, _postChars);
 
-        public bool ValidSyntax(ReadOnlySpan<KeyWord> code)
-        {
-            if (code.Length == 0) { return false; }
-
-            if (code.Length == 1)
-            {
-                return code[0].Type == KeyWordType.Word;
-            }
-
-            for (int i = 1; i < code.Length; i++)
-            {
-                if ((i % 2 == 1 && code[i].Word != "-")
-                        ||
-                    (i % 2 == 0 && code[i].Type != KeyWordType.Word))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => true;
+        public bool ValidSyntax(ReadOnlySpan<KeyWord> code) => code[0].Type == KeyWordType.Word;
+        public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => code[0].Type == KeyWordType.Word;
 
         public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
         {
-            index = 1;
+            index = code.Length;
 
-            if (code.Length < 1) { return null; }
+            if (code.Length < 1 || !fill) { return null; }
 
             string name = code[0].Word;
             Command c = Commands.Find(c => c.Name == name);
             // No command could be found
             if (c == null) { return null; }
 
-            object[] props = new object[c.Properties.Length];
-            // Fills props with false
-            for (int i = 0; i < props.Length; i++)
+            Executable[] props = FindProperties(code[1..], new LastFind(code, this), source, c.Properties);
+
+            // Invalid properties
+            if (props == null) { return null; }
+
+            KeyWord[] syntax = new KeyWord[1 + c.Properties.Length];
+            syntax[0] = new KeyWord(name, KeyWordType.Word);
+
+            for (int i = 1; i < syntax.Length; i++)
             {
-                props[i] = false;
+                syntax[i] = new KeyWord(c.Properties[i - 1].DataType);
             }
 
-            if (code.Length == 1)
-            {
-                return new CommandExecutable(this, new KeyWord[] { new KeyWord(name, KeyWordType.Word) }, props, objs =>
-                {
-                    c.Handle(objs);
-                    return null;
-                });
-            }
-
-            // Find all properties
-            for (int i = 1; i < code.Length; i++)
-            {
-                if (i % 2 == 1 && code[i].Word != "-")
-                {
-                    break;
-                }
-
-                index++;
-                if (i % 2 == 1) { continue; }
-
-                if (code[i].Word.Length > 1)
-                {
-                    if (fill) { return null; }
-                    break;
-                }
-
-                int proI = Array.IndexOf(c.Properties, code[i].Word[0]);
-
-                if (proI == -1)
-                {
-                    if (fill) { return null; }
-                    break;
-                }
-
-                props[proI] = true;
-            }
-
-            return new CommandExecutable(this, new KeyWord[] { new KeyWord(name, KeyWordType.Word) }, props, objs =>
-            {
-                c.Handle(objs);
-                return null;
-            });
+            return new CommandExecutable(this, syntax, props, c.Handle);
         }
         public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source)
         {
@@ -102,5 +47,75 @@ namespace CustomConsole
         }
 
         public static List<Command> Commands { get; } = new List<Command>();
+
+        private Executable[] FindProperties(ReadOnlySpan<KeyWord> syntax, LastFind lastcall, SyntaxPasser source, CommandProperty[] props)
+        {
+            if (props.Length == 0) { return new Executable[0]; }
+
+            List<(CommandProperty, int)> nonPrefix = new List<(CommandProperty, int)>();
+            List<(CommandProperty, int)> prefix = new List<(CommandProperty, int)>();
+
+            // Sort properties by prefix
+            for (int i = 0; i < props.Length; i++)
+            {
+                if (props[i].DataType == VarType.Bool)
+                {
+                    prefix.Add((props[i], i));
+                    continue;
+                }
+
+                nonPrefix.Add((props[i], i));
+            }
+
+            Executable[] exes = new Executable[props.Length];
+
+            int nonPreCount = 0;
+
+            for (int i = 0; i < syntax.Length; i++)
+            {
+                // Prefixed property
+                if (syntax[i].Word == "-")
+                {
+                    if (syntax.Length <= (i + 1)) { return null; }
+
+                    string name = syntax[i + 1].Word;
+                    i += 1;
+
+                    (CommandProperty, int) property = prefix.Find(cp => cp.Item1.Name == name);
+
+                    // No command property found
+                    if (property.Item1.Name == null) { return null; }
+
+                    exes[property.Item2] = new BooleanExecutable(this, new KeyWord[]
+                    {
+                        new KeyWord("-", KeyWordType.Special),
+                        new KeyWord(name, KeyWordType.Word)
+                    }, true);
+                    continue;
+                }
+
+                Executable e = source.FindCorrectSyntax(syntax[i..], lastcall, nonPrefix[nonPreCount].Item1.DataType, new KeyWord(), false, out int addI);
+
+                // No valid syntax
+                if (e == null) { return null; }
+
+                i += addI - 1;
+
+                exes[nonPrefix[nonPreCount].Item2] = e;
+
+                nonPreCount++;
+            }
+
+            // Replace all boolean nulls with false
+            for (int i = 0; i < exes.Length; i++)
+            {
+                if (exes[i] == null && props[i].DataType == VarType.Bool)
+                {
+                    exes[i] = new BooleanExecutable(this, null, false);
+                }
+            }
+
+            return exes;
+        }
     }
 }

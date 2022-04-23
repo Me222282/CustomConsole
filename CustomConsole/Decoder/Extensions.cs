@@ -184,8 +184,15 @@ namespace CustomConsole
                     continue;
                 }
 
-                if (inString && c == '\"' && code[i - 1] != '\\')
+                if (inString && c == '\"')
                 {
+                    // The last backslash wasn't the extent of another backslash
+                    if (code[i - 1] == '\\' && (code.Length > 2) && code[i - 2] != '\\')
+                    {
+                        word.Append(c);
+                        continue;
+                    }
+
                     newWord = true;
                     inString = false;
 
@@ -196,8 +203,15 @@ namespace CustomConsole
 
                     continue;
                 }
-                if (inChar && c == '\'' && code[i - 1] != '\\')
+                if (inChar && c == '\'')
                 {
+                    // The last backslash wasn't the extent of another backslash
+                    if (code[i - 1] == '\\' && (code.Length > 2) && code[i - 2] != '\\')
+                    {
+                        word.Append(c);
+                        continue;
+                    }
+
                     newWord = true;
                     inChar = false;
 

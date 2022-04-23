@@ -14,27 +14,13 @@ namespace CustomConsole
         {
             Source = src ?? throw new Exception($"{nameof(src)} cannot be null.");
 
-            if (syntax == null)
-            {
-                Syntax = new KeyWord[1] { new KeyWord("", 0) };
-            }
-            else
-            {
-                Syntax = syntax;
-            }
+            Syntax = syntax ?? new KeyWord[0];
 
-            if (subExecutables == null)
-            {
-                SubExecutables = Array.Empty<Executable>();
-            }
-            else
-            {
-                SubExecutables = subExecutables;
-            }
+            SubExecutables = subExecutables ?? Array.Empty<Executable>();
 
             Function = handle ?? throw new Exception($"{nameof(handle)} cannot be null.");
 
-            _inputTypes = GetInputTypes(syntax);
+            _inputTypes = GetInputTypes(Syntax);
             ReturnType = returnType;
         }
 
@@ -54,7 +40,7 @@ namespace CustomConsole
                 int subSyntaxCount = 0;
                 for (int i = 0; i < Syntax.Length; i++)
                 {
-                    if (Syntax[i].Word == "")
+                    if (Syntax[i].Type == KeyWordType.Input)
                     {
                         if (SubExecutables.Length < subSyntaxCount + 1)
                         {
@@ -86,7 +72,7 @@ namespace CustomConsole
                 {
                     string word = Syntax[i].Word;
 
-                    if (word == "")
+                    if (Syntax[i].Type == KeyWordType.Input)
                     {
                         if (SubExecutables.Length < inputCount + 1)
                         {
