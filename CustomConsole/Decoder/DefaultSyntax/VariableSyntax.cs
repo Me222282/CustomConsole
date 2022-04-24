@@ -2,7 +2,7 @@
 
 namespace CustomConsole
 {
-    public class GetVariableSyntax : ISyntax
+    public sealed class GetVariableSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Word) };
         public int InputCount => 0;
@@ -65,7 +65,7 @@ namespace CustomConsole
         }
     }
 
-    public class SetVariableSyntax : ISyntax
+    public sealed class SetVariableSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[3]
         {
@@ -155,7 +155,7 @@ namespace CustomConsole
         }
     }
 
-    public class CreateVariableSyntax : ISyntax
+    public sealed class CreateVariableSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[4]
         {

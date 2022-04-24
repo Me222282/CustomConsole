@@ -2,7 +2,7 @@
 
 namespace CustomConsole
 {
-    public class FloatSyntax : ISyntax
+    public sealed class FloatSyntax : ISyntax
     {
         private static readonly string[] _preChars = new string[] { ".", "f" };
         private static readonly string[] _postChars = new string[] { "." };

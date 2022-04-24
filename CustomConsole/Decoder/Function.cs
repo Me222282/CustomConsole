@@ -2,7 +2,7 @@
 
 namespace CustomConsole
 {
-    public class Function
+    public sealed class Function
     {
         public Function(string name, IVarType[] @params, IVarType returnType, ExecuteHandle handle)
         {

@@ -4,7 +4,7 @@ using Zene.Structs;
 
 namespace CustomConsole
 {
-    public class FontC2 : Font
+    public sealed class FontC2 : Font
     {
         private const double _pixelHeight = 1.0 / 272;
         private const double _pixelWidth = 1.0 / 649;

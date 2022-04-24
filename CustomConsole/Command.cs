@@ -2,7 +2,7 @@
 {
     public delegate void CommandHandler(object[] @params);
 
-    public class Command
+    public sealed class Command
     {
         public Command(string name, CommandProperty[] properties, CommandHandler handle)
         {

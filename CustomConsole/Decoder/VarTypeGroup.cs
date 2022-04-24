@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CustomConsole
 {
-    public class VarTypeGroup : IVarType
+    public sealed class VarTypeGroup : IVarType
     {
         public VarTypeGroup(params IVarType[] types)
         {

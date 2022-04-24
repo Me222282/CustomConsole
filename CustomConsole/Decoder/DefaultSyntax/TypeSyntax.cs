@@ -2,7 +2,7 @@
 
 namespace CustomConsole
 {
-    public class TypeSyntax : ISyntax
+    public sealed class TypeSyntax : ISyntax
     {
         public KeyWord[] Keywords { get; } = new KeyWord[1] { new KeyWord(null, KeyWordType.Word) };
         public int InputCount => 0;

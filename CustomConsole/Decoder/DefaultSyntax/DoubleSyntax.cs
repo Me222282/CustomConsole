@@ -2,7 +2,7 @@
 
 namespace CustomConsole
 {
-    public class DoubleSyntax : ISyntax
+    public sealed class DoubleSyntax : ISyntax
     {
         private static readonly string[] _preChars = new string[] { ".", "d" };
         private static readonly string[] _postChars = new string[] { "." };

@@ -88,6 +88,11 @@ namespace CustomConsole
             }
         }
 
+        private static readonly ScriptPasser _commandManager = new ScriptPasser(Log)
+        {
+            LogLineOutput = true
+        };
+
         public static void ExecuteCommand(string text)
         {
             text = text.Trim();
@@ -95,41 +100,17 @@ namespace CustomConsole
             // No value
             if (text.Length < 1) { return; }
 
-            SyntaxPasser sp = new SyntaxPasser();
+            _commandManager.Decode(text);
 
-            Executable e;
-            try
-            {
-                e = sp.Decode(text.FindKeyWords());
-            }
-            catch (ConsoleException ex)
-            {
-                Log(ex.Message);
-                return;
-            }
-
-            if (e == null) { return; }
-
-            string sc = e.SourceCode;
+            string sc = _commandManager.SourceCode;
             if (sc != "hx")
             {
                 _history.Add(sc);
             }
 
-            try
-            {
-                object o = e.Execute();
+            if (!_commandManager.Executable) { return; }
 
-                if (o != null)
-                {
-                    Log(o.ToString());
-                }
-            }
-            catch (Exception ex)
-            {
-                Log(ex.Message);
-                return;
-            }
+            _commandManager.Execute();
         }
 
         public static event EventHandler<string> OnLog;

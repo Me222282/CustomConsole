@@ -3,7 +3,7 @@
     public delegate void VariableSetter(object obj);
     public delegate object VariableGetter();
 
-    public class Variable
+    public sealed class Variable
     {
         public Variable(string name, IVarType type, VariableGetter get, VariableSetter set)
         {

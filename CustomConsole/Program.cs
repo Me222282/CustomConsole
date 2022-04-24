@@ -12,7 +12,7 @@ namespace CustomConsole
     class Program : Window
     {
         static void Main()
-        {
+        {/*
             Core.Init();
             
             Program window = new Program(800, 500, Terminal.Directory);
@@ -20,7 +20,7 @@ namespace CustomConsole
             window.Run();
             
             Core.Terminate();
-            return;
+            return;*/
             SyntaxPasser.Variables.Add(new Variable("bean", VarType.Int, 5));
             SyntaxPasser.Functions.Add(new Function(new string[] { "Maths", "Round" }, new IVarType[] { VarType.Double }, VarType.Double, objs =>
             {
@@ -60,9 +60,9 @@ namespace CustomConsole
                 Console.WriteLine($"{objs[2]} works with {objs[0]} and {objs[1]}");
             }));
 
-            //ExecuteFile("resources/zene.txt");
-            //Console.ReadLine();
-            //return;
+            ExecuteFile("resources/zene.txt");
+            Console.ReadLine();
+            return;
 
             KeyWord[] kws = "Maths.Round(5.3f) + 5.2d + bean".FindKeyWords();
 
@@ -94,56 +94,18 @@ namespace CustomConsole
         
         private static Executable PassLine(ReadOnlySpan<KeyWord> line)
         {
-            SyntaxPasser sp = new SyntaxPasser();
+            SyntaxPasser sp = new SyntaxPasser(default);
             return sp.Decode(line);
         }
         private static void ExecuteFile(string path)
         {
             string sourceCode = File.ReadAllText(path);
 
-            ReadOnlySpan<KeyWord> keywords = sourceCode.FindKeyWords();
-            int nextLineIndex = 0;
+            ScriptPasser sp = new ScriptPasser();
 
-            List<Executable> executables = new List<Executable>();
+            sp.Decode(sourceCode);
 
-            for (int i = 0; i < keywords.Length; i++)
-            {
-                // End of line
-                if (keywords[i].Word == ";")
-                {
-                    Executable e;
-                    try
-                    {
-                        e = PassLine(keywords[nextLineIndex..i]);
-                    }
-                    catch (ConsoleException ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                        Console.WriteLine($"Line {executables.Count}");
-                        return;
-                    }
-                    // No code in line
-                    if (e == null) { continue; }
-
-                    executables.Add(e);
-
-                    nextLineIndex = i + 1;
-                    continue;
-                }
-            }
-
-            for (int i = 0; i < executables.Count; i++)
-            {
-                try
-                {
-                    executables[i].Execute();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"{ex.GetType().Name} was thrown with message \"{ex.Message}\"");
-                    return;
-                }
-            }
+            sp.Execute();
         }
 
         public Program(int width, int height, string title)

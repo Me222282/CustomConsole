@@ -20,16 +20,25 @@ namespace CustomConsole
 
             Function = handle ?? throw new Exception($"{nameof(handle)} cannot be null.");
 
-            _inputTypes = GetInputTypes(Syntax);
             ReturnType = returnType;
         }
 
-        public ISyntax Source { get; }
-        public KeyWord[] Syntax { get; }
-        public Executable[] SubExecutables { get; }
+        public virtual ISyntax Source { get; }
+        private KeyWord[] _syntax;
+        public KeyWord[] Syntax
+        {
+            get => _syntax;
+            protected set
+            {
+                _syntax = value ?? new KeyWord[0];
+
+                _inputTypes = GetInputTypes(_syntax);
+            }
+        }
+        public virtual Executable[] SubExecutables { get; }
         
         public IVarType ReturnType { get; }
-        private readonly IVarType[] _inputTypes;
+        protected IVarType[] _inputTypes;
 
         public KeyWord[] CompleteSyntax
         {
@@ -62,6 +71,14 @@ namespace CustomConsole
         {
             get
             {
+                if (Source == null
+                        ||
+                    (SubExecutables == null &&
+                    _inputTypes.Length > 0))
+                {
+                    throw new Exception($"Insufficient {nameof(Executable)} data");
+                }
+
                 ICodeFormat format = Source.DisplayFormat ?? new DefaultCodeFormat();
 
                 StringBuilder str = new StringBuilder();
@@ -132,6 +149,8 @@ namespace CustomConsole
 
         private static IVarType[] GetInputTypes(KeyWord[] syntax)
         {
+            if (syntax == null) { return new IVarType[0]; }
+
             List<IVarType> types = new List<IVarType>();
             for (int i = 0; i < syntax.Length; i++)
             {

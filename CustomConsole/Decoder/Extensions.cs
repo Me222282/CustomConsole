@@ -233,6 +233,256 @@ namespace CustomConsole
 
             return keywords.ToArray();
         }
+        public static KeyWord[] FindKeyWords(this string code, out int[] lines)
+        {
+            code = code.Trim();
+
+            List<KeyWord> keywords = new List<KeyWord>(code.Length / 2);
+            List<int> kwLines = new List<int>(code.Length / 2);
+
+            int bracket = 0;
+            int bracketSquare = 0;
+            int bracketCurle = 0;
+
+            bool newWord = true;
+            bool inNumber = false;
+            bool inText = false;
+
+            bool inString = false;
+            bool inChar = false;
+
+            KeyWordType type = 0;
+
+            StringBuilder word = new StringBuilder();
+
+            int currentLine = 0;
+
+            for (int i = 0; i < code.Length; i++)
+            {
+                char c = code[i];
+
+                if (c == '\n') { currentLine++; }
+
+                if (!inString && !inChar && c == ')')
+                {
+                    newWord = true;
+                    inNumber = false;
+                    inText = false;
+
+                    if (word.Length > 0)
+                    {
+                        keywords.Add(new KeyWord(word.ToString(), type));
+                        kwLines.Add(currentLine);
+                        word.Clear();
+                    }
+
+                    bracket--;
+                    keywords.Add(new KeyWord(")", KeyWordType.BracketClosed, bracket));
+                    kwLines.Add(currentLine);
+                    continue;
+                }
+                if (!inString && !inChar && c == ']')
+                {
+                    newWord = true;
+                    inNumber = false;
+                    inText = false;
+
+                    if (word.Length > 0)
+                    {
+                        keywords.Add(new KeyWord(word.ToString(), type));
+                        kwLines.Add(currentLine);
+                        word.Clear();
+                    }
+
+                    bracketSquare--;
+                    keywords.Add(new KeyWord("]", KeyWordType.BracketClosed, bracketSquare));
+                    kwLines.Add(currentLine);
+                    continue;
+                }
+                if (!inString && !inChar && c == '}')
+                {
+                    newWord = true;
+                    inNumber = false;
+                    inText = false;
+
+                    if (word.Length > 0)
+                    {
+                        keywords.Add(new KeyWord(word.ToString(), type));
+                        kwLines.Add(currentLine);
+                        word.Clear();
+                    }
+
+                    bracketCurle--;
+                    keywords.Add(new KeyWord("}", KeyWordType.BracketClosed, bracketCurle));
+                    kwLines.Add(currentLine);
+                    continue;
+                }
+
+                if (newWord)
+                {
+                    if (c == '(')
+                    {
+                        keywords.Add(new KeyWord("(", KeyWordType.BracketOpen, bracket));
+                        kwLines.Add(currentLine);
+                        bracket++;
+                        continue;
+                    }
+                    if (c == '[')
+                    {
+                        keywords.Add(new KeyWord("[", KeyWordType.BracketOpen, bracketSquare));
+                        kwLines.Add(currentLine);
+                        bracketSquare++;
+                        continue;
+                    }
+                    if (c == '{')
+                    {
+                        keywords.Add(new KeyWord("{", KeyWordType.BracketOpen, bracketCurle));
+                        kwLines.Add(currentLine);
+                        bracketCurle++;
+                        continue;
+                    }
+                    if (char.IsNumber(c))
+                    {
+                        newWord = false;
+                        inNumber = true;
+                        type = KeyWordType.Number;
+
+                        word.Append(c);
+
+                        continue;
+                    }
+                    if (c == '_' || char.IsLetter(c))
+                    {
+                        newWord = false;
+                        inText = true;
+                        type = KeyWordType.Word;
+
+                        word.Append(c);
+
+                        continue;
+                    }
+                    if (c == '\"')
+                    {
+                        newWord = false;
+                        inString = true;
+                        type = KeyWordType.String;
+
+                        keywords.Add(new KeyWord("\"", KeyWordType.String));
+                        kwLines.Add(currentLine);
+
+                        continue;
+                    }
+                    if (c == '\'')
+                    {
+                        newWord = false;
+                        inChar = true;
+                        type = KeyWordType.Char;
+
+                        keywords.Add(new KeyWord("\'", KeyWordType.Char));
+                        kwLines.Add(currentLine);
+
+                        continue;
+                    }
+                    if (!char.IsWhiteSpace(c))
+                    {
+                        keywords.Add(new KeyWord(c.ToString(), KeyWordType.Special));
+                        kwLines.Add(currentLine);
+
+                        continue;
+                    }
+
+                    continue;
+                }
+
+                // Underscores can be insinde numbers
+                if (inNumber && c == '_' &&
+                    // not at end of string
+                    code.Length > (i + 10) &&
+                    char.IsNumber(code[i + 1]))
+                {
+                    continue;
+                }
+                if (inNumber && c != '.' && !char.IsNumber(c))
+                {
+                    newWord = true;
+                    inNumber = false;
+
+                    keywords.Add(new KeyWord(word.ToString(), KeyWordType.Number));
+                    kwLines.Add(currentLine);
+                    word.Clear();
+
+                    i--;
+                    continue;
+                }
+
+                if (inText && c != '_' && !char.IsNumber(c) && !char.IsLetter(c))
+                {
+                    newWord = true;
+                    inText = false;
+
+                    keywords.Add(new KeyWord(word.ToString(), KeyWordType.Word));
+                    kwLines.Add(currentLine);
+                    word.Clear();
+
+                    i--;
+                    continue;
+                }
+
+                if (inString && c == '\"')
+                {
+                    // The last backslash wasn't the extent of another backslash
+                    if (code[i - 1] == '\\' && (code.Length > 2) && code[i - 2] != '\\')
+                    {
+                        word.Append(c);
+                        continue;
+                    }
+
+                    newWord = true;
+                    inString = false;
+
+                    keywords.Add(new KeyWord(word.ToString(), KeyWordType.String));
+                    kwLines.Add(currentLine);
+                    word.Clear();
+
+                    keywords.Add(new KeyWord("\"", KeyWordType.String));
+                    kwLines.Add(currentLine);
+
+                    continue;
+                }
+                if (inChar && c == '\'')
+                {
+                    // The last backslash wasn't the extent of another backslash
+                    if (code[i - 1] == '\\' && (code.Length > 2) && code[i - 2] != '\\')
+                    {
+                        word.Append(c);
+                        continue;
+                    }
+
+                    newWord = true;
+                    inChar = false;
+
+                    keywords.Add(new KeyWord(word.ToString(), KeyWordType.Char));
+                    kwLines.Add(currentLine);
+                    word.Clear();
+
+                    keywords.Add(new KeyWord("\'", KeyWordType.Char));
+                    kwLines.Add(currentLine);
+
+                    continue;
+                }
+
+                word.Append(c);
+            }
+
+            if (word.Length > 0)
+            {
+                keywords.Add(new KeyWord(word.ToString(), type));
+                kwLines.Add(currentLine);
+            }
+
+            lines = kwLines.ToArray();
+            return keywords.ToArray();
+        }
         public static string CreateCode(this KeyWord[] keywords, ICodeFormat format = null)
         {
             if (format == null)

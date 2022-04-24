@@ -2,7 +2,7 @@
 
 namespace CustomConsole
 {
-    public class StringSyntax : ISyntax
+    public sealed class StringSyntax : ISyntax
     {
         private static readonly string[] _preChars = new string[] { "\"" };
 

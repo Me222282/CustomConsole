@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CustomConsole
 {
-    public class FunctionSyntax : ISyntax
+    public sealed class FunctionSyntax : ISyntax
     {
         private static readonly string[] _preChars = new string[] { ")", "(", ".", "," };
         private static readonly string[] _postChars = new string[] { ")", "(", "." };

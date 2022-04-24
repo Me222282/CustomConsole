@@ -4,8 +4,15 @@ using Zene.Structs;
 
 namespace CustomConsole
 {
-    public class SyntaxPasser
+    public sealed class SyntaxPasser
     {
+        public SyntaxPasser(ScriptPasser src)
+        {
+            Source = src ?? ScriptPasser.Default;
+        }
+
+        public ScriptPasser Source { get; }
+
         private readonly List<ISyntax> _possibleSyntaxes = new List<ISyntax>();
 
         private Executable FindSyntax(ReadOnlySpan<KeyWord> syntax, IVarType returnType)

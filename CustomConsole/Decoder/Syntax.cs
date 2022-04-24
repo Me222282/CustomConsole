@@ -177,5 +177,23 @@ namespace CustomConsole
 
             return e;
         }
+
+        public static ISyntax Unknown { get; } = new UnknownSyntax();
+        private class UnknownSyntax : ISyntax
+        {
+            public KeyWord[] Keywords => Array.Empty<KeyWord>();
+            public int InputCount => 0;
+            public IVarType ReturnType => VarType.Any;
+            public ICodeFormat DisplayFormat { get; } = new DefaultCodeFormat();
+
+            public Executable CorrectSyntax(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source, KeyWord nextKeyword, out int index, bool fill)
+            {
+                index = 0;
+                return null;
+            }
+            public Executable CreateInstance(ReadOnlySpan<KeyWord> code, IVarType type, SyntaxPasser source) => null;
+            public bool PossibleSyntax(ReadOnlySpan<KeyWord> code) => false;
+            public bool ValidSyntax(ReadOnlySpan<KeyWord> code) => false;
+        }
     }
 }
