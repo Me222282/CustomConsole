@@ -5,7 +5,7 @@ using Zene.Graphics;
 using Zene.Structs;
 using System.Text;
 using System.IO;
-using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace CustomConsole
 {
@@ -298,9 +298,16 @@ namespace CustomConsole
 
             if (e[Keys.Left])
             {
-                _textIndex--;
                 // Reset caret timer
                 GLFW.SetTime(0);
+
+                if (_ctrl)
+                {
+                    _textIndex = FindNextSigLeft(_textIndex);
+                    return;
+                }
+
+                _textIndex--;
 
                 if (_textIndex < 0)
                 {
@@ -309,9 +316,16 @@ namespace CustomConsole
             }
             if (e[Keys.Right])
             {
-                _textIndex++;
                 // Reset caret timer
                 GLFW.SetTime(0);
+
+                if (_ctrl)
+                {
+                    _textIndex = FindNextSigRight(_textIndex);
+                    return;
+                }
+
+                _textIndex++;
 
                 if (_textIndex > _enterText.Length)
                 {
@@ -321,14 +335,43 @@ namespace CustomConsole
 
             if (e[Keys.BackSpace] && _enterText.Length > 0)
             {
-                _textIndex--;
                 // Reset caret timer
                 GLFW.SetTime(0);
+
+                if (_ctrl)
+                {
+                    int old = _textIndex;
+                    _textIndex = FindNextSigLeft(_textIndex);
+
+                    _enterText.Remove(_textIndex, old - _textIndex);
+                    return;
+                }
+
+                _textIndex--;
+
                 if (_textIndex < 0)
                 {
                     _textIndex = 0;
+                    return;
                 }
-                // Remove character at text index
+                // Remove character before text index
+                _enterText.Remove(_textIndex, 1);
+                return;
+            }
+            if (e[Keys.Delete] && _enterText.Length > _textIndex)
+            {
+                // Reset caret timer
+                GLFW.SetTime(0);
+
+                if (_ctrl)
+                {
+                    int @new = FindNextSigRight(_textIndex);
+
+                    _enterText.Remove(_textIndex, @new - _textIndex);
+                    return;
+                }
+
+                // Remove character after text index
                 _enterText.Remove(_textIndex, 1);
                 return;
             }
@@ -343,9 +386,24 @@ namespace CustomConsole
                 {
                     Terminal.NewLine();
                 }
-
+                
                 _enterText.Clear();
                 _textIndex = 0;
+                return;
+            }
+
+            if (e[Keys.V] && _ctrl)
+            {
+                IntPtr ptr = GLFW.GetClipboardString(Handle);
+
+                string str = Marshal.PtrToStringUTF8(ptr);
+
+                // No string
+                if (str.Length == 0) { return; }
+
+                _enterText.Insert(_textIndex, str);
+                _textIndex += str.Length;
+                return;
             }
         }
         protected override void OnKeyUp(KeyEventArgs e)
@@ -357,6 +415,97 @@ namespace CustomConsole
                 _ctrl = false;
                 return;
             }
+        }
+
+        private int FindNextSigRight(int index)
+        {
+            // Not long enough
+            if (_enterText.Length <= index) { return _enterText.Length; }
+            
+            char current = _enterText[index];
+
+            bool isNumber = current == '.' || char.IsNumber(current);
+            bool isText = current == '_' || char.IsLetter(current);
+            
+            bool afterWhiteSpace = !isNumber && !isText;
+
+            for (index++; index < _enterText.Length; index++)
+            {
+                char c = _enterText[index];
+                
+                if (afterWhiteSpace && !char.IsWhiteSpace(c))
+                {
+                    return index;
+                }
+
+                if (isNumber && c != '_' && c != '.' && !char.IsNumber(c))
+                {
+                    afterWhiteSpace = true;
+                    isNumber = false;
+                    index--;
+                    continue;
+                }
+
+                if (isText && c != '_' && !char.IsNumber(c) && !char.IsLetter(c))
+                {
+                    afterWhiteSpace = true;
+                    isText = false;
+                    index--;
+                    continue;
+                }
+            }
+
+            return _enterText.Length;
+        }
+        private int FindNextSigLeft(int index)
+        {
+            index--;
+
+            // Not long enough
+            if (index <= 0) { return 0; }
+
+            char current;
+            if (_enterText.Length <= index)
+            {
+                current = _enterText[^1];
+            }
+            else
+            {
+                current = _enterText[index];
+            }
+
+            bool isNumber = current == '.' || char.IsNumber(current);
+            bool isText = current == '_' || char.IsLetter(current);
+
+            bool afterWhiteSpace = !isNumber && !isText;
+
+            for (index--; index >= 0; index--)
+            {
+                char c = _enterText[index];
+
+                if (afterWhiteSpace && !char.IsWhiteSpace(c))
+                {
+                    return index + 1;
+                }
+
+                if (isNumber && c != '_' && c != '.' && !char.IsNumber(c))
+                {
+                    afterWhiteSpace = true;
+                    isNumber = false;
+                    index++;
+                    continue;
+                }
+
+                if (isText && c != '_' && !char.IsNumber(c) && !char.IsLetter(c))
+                {
+                    afterWhiteSpace = true;
+                    isText = false;
+                    index++;
+                    continue;
+                }
+            }
+
+            return 0;
         }
 
         protected override void OnTextInput(TextInputEventArgs e)

@@ -1,6 +1,6 @@
 ﻿int number = |-11|;
 
-number.Type i = 1 | (-2) | |4|;
+number.Type i = (-2) | |4|;
 
 Console.WriteLine(i);
 Console.WriteLine(number.Type);

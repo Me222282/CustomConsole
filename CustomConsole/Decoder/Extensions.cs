@@ -28,7 +28,7 @@ namespace CustomConsole
             KeyWordType type = 0;
 
             StringBuilder word = new StringBuilder();
-
+            
             for (int i = 0; i < code.Length; i++)
             {
                 char c = code[i];
@@ -151,7 +151,7 @@ namespace CustomConsole
 
                     continue;
                 }
-
+                
                 // Underscores can be insinde numbers
                 if (inNumber && c == '_' &&
                     // not at end of string
